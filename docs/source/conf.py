@@ -18,7 +18,7 @@ project = 'stambo'
 copyright = '2024, Aleksei Tiulpin'
 author = 'Aleksei Tiulpin'
 version = "0.1"
-release = f"v{version}.2"
+release = f"v{version}.3"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

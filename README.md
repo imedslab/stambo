@@ -1,7 +1,7 @@
 # StaMBO: Statistical model comparison with bootstrap 
 [![DOI](https://zenodo.org/badge/747404839.svg)](https://zenodo.org/doi/10.5281/zenodo.10669416)
 [![PyPI version](https://badge.fury.io/py/stambo.svg?branch=master)](https://badge.fury.io/py/stambo)
-[![docs](https://github.com/oulu-imeds/stambo/workflows/documentation/badge.svg)](https://oulu-imeds.github.io/stambo/)
+[![docs](https://github.com/imedslab/stambo/workflows/documentation/badge.svg)](https://oulu-imeds.github.io/stambo/)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
 ------------------------
 This package is aimed to be a one-stop-shop for statistical testing in machine learning when it comes to evaluating models on a test set and comparing whether our *improved* model is really beating the baseline. That is, we cover the following very typical use-case in machine learning:
