@@ -16,8 +16,8 @@ class PredSampleWrapper:
         """Wraps predictions and targets in one object.
 
         Args:
-            predictions (npt.NDArray[Union[np.float64, np.int_]): _description_
-            gt (npt.NDArray[Union[np.float64 np.int_]]): _description_
+            predictions (npt.NDArray[Union[np.float64, np.int64]): _description_
+            gt (npt.NDArray[Union[np.float64 np.int64]]): _description_
             multiclass (bool, optional): Whether it is a multiclass classifier's sample. Defaults to True.
             threshold (Optional[float]): Whether to apply the threshold to predictions in the case when we deal with the binary classification. Defaults to 0.5.
         """
