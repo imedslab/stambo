@@ -3,8 +3,8 @@ import numpy as np
 import numpy.typing as npt
 
 
-PredGtType = npt.NDArray[Union[np.float_, np.int_]]
-PredTuple = Tuple[np.float_, np.int_, Union[np.float_,np.int_]]
+PredGtType = npt.NDArray[Union[np.float64, np.int_]]
+PredTuple = Tuple[np.float64, np.int_, Union[np.float64, np.int_]]
 IndexType = Union[int, Iterable[int], npt.NDArray[np.int_]]
 PredSampleWrapperType = TypeVar("PredSampleWrapperType", bound="PredSampleWrapper")
 
@@ -16,8 +16,8 @@ class PredSampleWrapper:
         """Wraps predictions and targets in one object.
 
         Args:
-            predictions (npt.NDArray[Union[np.float_, np.int_]): _description_
-            gt (npt.NDArray[Union[np.float_, np.int_]]): _description_
+            predictions (npt.NDArray[Union[np.float64, np.int_]): _description_
+            gt (npt.NDArray[Union[np.float64 np.int_]]): _description_
             multiclass (bool, optional): Whether it is a multiclass classifier's sample. Defaults to True.
             threshold (Optional[float]): Whether to apply the threshold to predictions in the case when we deal with the binary classification. Defaults to 0.5.
         """
@@ -45,7 +45,7 @@ class PredSampleWrapper:
             idx (Union[int, Iterable[int], npt.NDArray[np.int_]]): Index / indices.
 
         Returns:
-            Tuple[Union[npt.NDArray[np.int_], npt.NDArray[np.float_]], Union[npt.NDArray[np.int_], npt.NDArray[np.float_]]]: A pair of predictions
+            Tuple[Union[npt.NDArray[np.int_], npt.NDArray[np.float64]], Union[npt.NDArray[np.int_], npt.NDArray[np.float64]]]: A pair of predictions
         """
 
         if isinstance(idx, int):

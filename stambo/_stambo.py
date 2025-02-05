@@ -64,12 +64,16 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         emp_s2 = statistics[s_tag](sample_2) 
         emp_diff = emp_s2 - emp_s1
         # The null distribution for the standard error
+        # Note that the null distribution is a coming from bootstrap
+        # We shift the bootstrap distribution by the empirical difference
         null = result[s_tag][:, 1] - result[s_tag][:, 0] - emp_diff
         # Bootstrap checks whether the empirical difference is within the margins of the standard error
-        if two_tailed:
-            emp_diff = abs(emp_diff)
-        p_val = ((null >= abs(emp_diff)).sum() + 1.) / (n_bootstrap + 1)
+        left_sided_p_val = ((null <= emp_diff).sum() + 1.) / (n_bootstrap + 1)
+        right_sided_p_val = ((null >= emp_diff).sum() + 1.) / (n_bootstrap + 1)
+        p_val = 2 * min(left_sided_p_val, right_sided_p_val)
         # We also want to compute the confidence intervals
+        # In this version of STAMBO, we use the simple percentile method
+        # In the future, we will implement the BCa approach
         ci_s1 = (np.percentile(result[s_tag][:, 0], alpha / 2.), np.percentile(result[s_tag][:, 0], 100 - alpha / 2.))
         ci_s2 = (np.percentile(result[s_tag][:, 1], alpha / 2.), np.percentile(result[s_tag][:, 1], 100 - alpha / 2.))
         # And we report the p-value, empirical values, as well as the confidence intervals. 
