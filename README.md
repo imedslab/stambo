@@ -1,4 +1,5 @@
 # StaMBO: Statistical model comparison with bootstrap 
+[![DOI](https://zenodo.org/badge/747404839.svg)](https://zenodo.org/doi/10.5281/zenodo.10669416)
 [![PyPI version](https://badge.fury.io/py/stambo.svg?branch=master)](https://badge.fury.io/py/stambo)
 [![docs](https://github.com/imedslab/stambo/workflows/documentation/badge.svg)](https://imedslab.github.io/stambo/)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
@@ -53,4 +54,4 @@ make html
 ```
 
 ## Author
-Aleksei Tiulpin
+Dr. Aleksei Tiulpin, PhD

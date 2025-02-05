@@ -1,4 +1,5 @@
 from tqdm import tqdm
+import sys
 from typing import Iterable, Dict, Tuple, Optional
 
 def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> tqdm:
@@ -7,8 +8,10 @@ def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> tqdm:
     return tqdm(iterable, total=total, desc=desc)
 
 def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_name: Optional[str]="M2") -> str:
-    """Converts a report returned by the model into a LaTeX table for convenient viewing.
-
+    """Converts a report returned by StamBO into a LaTeX table for convenient viewing.
+    
+        Note: the p-value is the left-sided p-value. The alternative hypothesis is that the second model
+        
     Args:
         report (Dict[str, Tuple[float]]): A dictionary with metrics. Use the stambo-generated format.
         m1 (str, optional): Name to assign to the table row. Defaults to M1.

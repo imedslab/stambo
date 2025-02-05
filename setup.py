@@ -6,7 +6,7 @@
 from setuptools import find_packages, setup
 
 
-requirements = ["numpy>=1.20.0", "scikit-learn>=1.3.0", "tqdm>=4.0.0"]
+requirements = ["numpy>=2.0.0", "scikit-learn>=1.3.0", "tqdm>=4.0.0"]
 
 setup_requirements = ()
 
@@ -43,7 +43,7 @@ setup(
     setup_requires=setup_requirements,
     test_suite="tests",
     tests_require=test_requirements,
-    url="https://github.com/oulu-imeds/stambo",
-    version="0.1.2",
+    url="https://github.com/imedslab/stambo",
+    version="0.1.3",
     zip_safe=False,
 )

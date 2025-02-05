@@ -1,8 +1,9 @@
 name: documentation
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '*'
 permissions:
   contents: write
 
