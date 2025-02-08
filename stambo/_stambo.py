@@ -63,17 +63,12 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
     for s_tag in result:
         emp_s1 = statistics[s_tag](sample_1)
         emp_s2 = statistics[s_tag](sample_2) 
-        # Let us assume that the difference is 0
-        # Then we need to check what is the probability of a random variable being less than zero
-        # The random variable is Z=metric(model 1) - metric(model 2)
-        # The null hypothesis is that the models are equal, i.e. Z=0
-        # So on our test we computed the CDF: P(Z < 0) for the left-sided p-value
-        # We also computed the CDF: P(Z > 0) for the right-sided p-value
-        # The two-sided p-value is the minimum of the two
-        null = result[s_tag][:, 1] - result[s_tag][:, 0]
-        # Bootstrap checks whether the empirical difference is within the margins of the standard error
-        cdf_at_zero = ((null <= 0).sum() + 1.) / (n_bootstrap + 1)
-        p_val = 2 * min(cdf_at_zero, 1 - cdf_at_zero)
+
+        observed = emp_s2 - emp_s1
+        # Generaing the null
+        null = result[s_tag][:, 1] - result[s_tag][:, 0] - observed
+        cdf_left = ((null <= -observed).sum() + 1.) / (n_bootstrap + 1)
+        p_val = 2 * min(cdf_left, 1 - cdf_left)
         # We also want to compute the confidence intervals
         # In this version of STAMBO, we use the simple percentile method
         # In the future, we will implement the BCa approach
@@ -81,7 +76,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         ci_s2 = (np.percentile(result[s_tag][:, 1], alpha / 2.), np.percentile(result[s_tag][:, 1], 100 - alpha / 2.))
         # And we report the p-value, empirical values, as well as the confidence intervals. 
         # The the format in the documentation.
-        result_final[s_tag] = [p_val, cdf_at_zero, 1 - cdf_at_zero, emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
+        result_final[s_tag] = [p_val, cdf_left, 1 - cdf_left, emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
         result_final[s_tag] = np.array(result_final[s_tag])
     return result_final
 
