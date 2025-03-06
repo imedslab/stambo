@@ -31,6 +31,9 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
                             The expected format in the output in every dict entry is: 
                             
                             * two-sided p-value
+                            * observed difference (effect size)
+                            * CI low (effect size)
+                            * CI high (effect size)
                             * empirical value (sample 1), 
                             * CI low (sample 1)
                             * CI high (sample 1)
@@ -49,13 +52,11 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
     result = {s_tag: np.zeros((n_bootstrap, 2)) for s_tag in statistics}
 
     for bootstrap_iter in pbar(range(n_bootstrap), total=n_bootstrap, desc="Bootstrapping", silent=silent):
-        ind = np.random.choice(len(sample_1), len(sample_1), replace=True)
-
+        ind1 = np.random.choice(len(sample_1), len(sample_1), replace=True)
+        ind2 = np.random.choice(len(sample_1), len(sample_1), replace=True)
         for s_tag in statistics:
-            v1 = statistics[s_tag](sample_1[ind])
-            v2 = statistics[s_tag](sample_2[ind])
-            result[s_tag][bootstrap_iter, 0] = v1
-            result[s_tag][bootstrap_iter, 1] = v2
+            result[s_tag][bootstrap_iter, 0] = statistics[s_tag](sample_1[ind1])
+            result[s_tag][bootstrap_iter, 1] = statistics[s_tag](sample_2[ind2])
     
     result_final = {}
     for s_tag in result:
@@ -67,14 +68,17 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         null = result[s_tag][:, 1] - result[s_tag][:, 0] - observed
         cdf_left = ((null <= -observed).sum() + 1.) / (n_bootstrap + 1)
         p_val = 2 * min(cdf_left, 1 - cdf_left)
+        # Compute the standardized effect size
+        es_bs = result[s_tag][:, 1] - result[s_tag][:, 0]
         # We also want to compute the confidence intervals
         # In this version of STAMBO, we use the simple percentile method
         # In the future, we will implement the BCa approach
+        ci_es = (np.percentile(es_bs, alpha / 2.), np.percentile(es_bs, 100 - alpha / 2.))
         ci_s1 = (np.percentile(result[s_tag][:, 0], alpha / 2.), np.percentile(result[s_tag][:, 0], 100 - alpha / 2.))
         ci_s2 = (np.percentile(result[s_tag][:, 1], alpha / 2.), np.percentile(result[s_tag][:, 1], 100 - alpha / 2.))
         # And we report the p-value, empirical values, as well as the confidence intervals. 
         # The the format in the documentation.
-        result_final[s_tag] = [p_val, emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
+        result_final[s_tag] = [p_val, observed, ci_es[0], ci_es[1], emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
         result_final[s_tag] = np.array(result_final[s_tag])
     return result_final
 
@@ -127,7 +131,9 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
                             The expected format in the output in every dict entry is:
 
                             * Two sided :math:`p`-value
-                            * :math:`d_s`: Standardized effect-size
+                            * Observed difference (effect size)
+                            * Effect size CI low
+                            * Effect size CI high
                             * :math:`M(y_{gt}, \hat y_{1})`
                             * :math:`M(y_{gt}, \hat y_{1})_{(\\alpha / 2)}`
                             * :math:`M(y_{gt}, \hat y_{1})_{(1 - \\alpha / 2)}`
@@ -151,6 +157,6 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
     test_results = two_sample_test(sample_1, sample_2, statistics=metrics_dict, alpha=alpha, n_bootstrap=n_bootstrap, seed=seed, silent=silent)
     output = {}
     for metric in test_results:
-        output[metric] = test_results[metric][[1, 3, 4, 5, 6, 7, 8]]
+        output[metric] = test_results[metric]
     return output
     
