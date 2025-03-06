@@ -31,8 +31,6 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
                             The expected format in the output in every dict entry is: 
                             
                             * two-sided p-value
-                            * left sided p-value
-                            * right sided p-value
                             * empirical value (sample 1), 
                             * CI low (sample 1)
                             * CI high (sample 1)
@@ -76,7 +74,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         ci_s2 = (np.percentile(result[s_tag][:, 1], alpha / 2.), np.percentile(result[s_tag][:, 1], 100 - alpha / 2.))
         # And we report the p-value, empirical values, as well as the confidence intervals. 
         # The the format in the documentation.
-        result_final[s_tag] = [p_val, cdf_left, 1 - cdf_left, emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
+        result_final[s_tag] = [p_val, emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
         result_final[s_tag] = np.array(result_final[s_tag])
     return result_final
 
@@ -89,14 +87,14 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
                    n_bootstrap: int=10000, seed: int=None, 
                    silent: bool=False) -> Dict[str, Tuple[float]]:
     """Compares predictions from two models :math:`f_1(x)` and :math:`f_1(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}` 
-    with a one-tailed bootstrap hypothesis test (left-sided p-value).
+    with a two-tailed bootstrap hypothesis test.
     
     I.e., we state the following null and alternative hypotheses:
 
     .. math::
         H_0: M(y_{gt}, \hat y_{1}) = M(y_{gt}, \hat y_{2})
 
-        H_1: M(y_{gt}, \hat y_{1}) < M(y_{gt}, \hat y_{2}),
+        H_1: M(y_{gt}, \hat y_{1}) != M(y_{gt}, \hat y_{2}),
 
     where :math:`M` is a metric, :math:`y_{gt}` is the vector of ground truth labels, 
     and :math:`\hat y_{i}, i=1,2` are the vectors of predictions for model 1 and 2, respectively. 
@@ -107,7 +105,9 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
     
     While the test does return you the :math:`p`-value, one should be careful about its interpretation: the :math:`p`-value 
     is the probability of observing the test statistic *at least as extreme* as the one obtained assuming that:math:`H_0` is true (probability of Type II error).
-    With large data, even small effects can be statistically significant, so one should consider the effect size. The effect size will come in the next releases.
+    With large data, even small effects can be statistically significant, so one should consider the effect size. 
+    
+    We compute a standardized effect size using the estimated bootstrap variance.
 
     Beyond the hypothesis testing, the function also returns confidence intervals per metric, i.e. :math:`[M(y_{gt}, \hat y)_{(\\alpha / 2)}, M(y_{gt}, \hat y)_{(1 - \\alpha / 2)}]`. At this moment, 
     the confidence intervals are computed using the simple percentile method. In the future, we will implement the BCa approach, which is more accurate.
@@ -126,7 +126,8 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
         Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the left-sided p-value. 
                             The expected format in the output in every dict entry is:
 
-                            * :math:`p`-value
+                            * Two sided :math:`p`-value
+                            * :math:`d_s`: Standardized effect-size
                             * :math:`M(y_{gt}, \hat y_{1})`
                             * :math:`M(y_{gt}, \hat y_{1})_{(\\alpha / 2)}`
                             * :math:`M(y_{gt}, \hat y_{1})_{(1 - \\alpha / 2)}`
