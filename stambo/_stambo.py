@@ -10,7 +10,7 @@ from . import metrics as metricslib
 
 def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper], 
                     sample_2: Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper], 
-                    statistics: Dict[str, Callable]=None, 
+                    statistics: Dict[str, Callable], 
                     groups: Optional[npt.NDArray[np.int64]]=None,
                     alpha: float=0.05, 
                     n_bootstrap: int=10000, seed: int=None, 
@@ -51,6 +51,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         np.random.seed(seed)
 
     alpha = 100 * alpha
+
 
     # Dict to store the null bootstrap distribution
     result = {s_tag: np.zeros((n_bootstrap, 2)) for s_tag in statistics}
@@ -115,6 +116,7 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
                    preds_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]], 
                    preds_2: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]], 
                    metrics: Tuple[Union[str, Metric]],
+                   groups: Optional[npt.NDArray[np.int64]]=None,
                    alpha: Optional[float]=0.05, 
                    n_bootstrap: int=10000, seed: int=None, 
                    silent: bool=False) -> Dict[str, Tuple[float]]:
@@ -149,6 +151,7 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
         preds_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Prediction from model 1
         preds_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Prediction from model 2
         metrics (Tuple[Union[str, Metric]]): A set of metrics to call. Here, the user either specifies the metrics available from the stambo library (``stambo.metrics``), or adds an instance of the custom-defined metrics.
+        groups (Optional[npt.NDArray[np.int64]]): Groups indicating the subject for each measurement.
         alpha (float, optional): A significance level for confidence intervals (from 0 to 1).
         n_bootstrap (int, optional): The number of bootstrap iterations. Defaults to 10000.
         seed (int, optional): Random seed. Defaults to None.
@@ -182,7 +185,7 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
             assert hasattr(metricslib, metric), f"Metric {metric} is not defined"
             metrics_dict[metric] = getattr(metricslib, metric)()
 
-    test_results = two_sample_test(sample_1, sample_2, statistics=metrics_dict, alpha=alpha, n_bootstrap=n_bootstrap, seed=seed, silent=silent)
+    test_results = two_sample_test(sample_1, sample_2, statistics=metrics_dict, groups=groups, alpha=alpha, n_bootstrap=n_bootstrap, seed=seed, non_paired=False, silent=silent)
     output = {}
     for metric in test_results:
         output[metric] = test_results[metric]
