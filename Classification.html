@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comparing two classification models using stambo &mdash; stambo v0.1.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/msmb.css?v=51bd699f" />
+      <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=0636b7af"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="_static/js/versions.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Classification &amp; non-i.i.d. data" href="Classification_non_iid.html" />
+    <link rel="prev" title="Metrics" href="metrics.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+          </a>
+              <div class="version">
+                0.1.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to stambo’s documentation!</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="stambo.html">Main functionality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Comparing two classification models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Import-of-necessary-libraries">Import of necessary libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Loading-the-UCI-breast-cancer-dataset-and-creating-train-test-split">Loading the UCI breast cancer dataset and creating train-test split</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Training-the-models">Training the models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Statistical-testing">Statistical testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Own-metrics">Own metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Classification_non_iid.html">Classification &amp; non-i.i.d. data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regression.html">Comparing two regression models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="Two_sample_test.html">Comparing two samples using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">stambo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Comparing two classification models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/Classification.nblink.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="Comparing-two-classification-models-using-stambo">
+<h1>Comparing two classification models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code><a class="headerlink" href="#Comparing-two-classification-models-using-stambo" title="Link to this heading"></a></h1>
+<p><a class="reference external" href="https://mybinder.org/v2/gh/Oulu-IMEDS/stambo/main?labpath=notebooks%2FClassification.ipynb"><img alt="Binder" src="https://mybinder.org/badge_logo.svg" /></a></p>
+<p>V1.1.3: © Aleksei Tiulpin, PhD, 2025</p>
+<p>This notebook shows an end-to-end example on how one can take a dataset, train two machine learning models, and conduct a statistical test to assess whether the two models are different. We will first use a set of classical metrics (basically the metrics from sklearn). At the end of the tutorial, we will show how one can generate a LaTeX report, and implement a custom metric.</p>
+<section id="Import-of-necessary-libraries">
+<h2>Import of necessary libraries<a class="headerlink" href="#Import-of-necessary-libraries" title="Link to this heading"></a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">stambo</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KNeighborsClassifier</span>
+<span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LogisticRegression</span>
+<span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_auc_score</span>
+
+<span class="n">SEED</span> <span class="o">=</span> <span class="mi">2025</span>
+
+<span class="n">stambo</span><span class="o">.</span><span class="n">__version__</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&#39;0.1.4&#39;
+</pre></div></div>
+</div>
+</section>
+<section id="Loading-the-UCI-breast-cancer-dataset-and-creating-train-test-split">
+<h2>Loading the UCI breast cancer dataset and creating train-test split<a class="headerlink" href="#Loading-the-UCI-breast-cancer-dataset-and-creating-train-test-split" title="Link to this heading"></a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_breast_cancer</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">Xtr</span><span class="p">,</span> <span class="n">Xte</span><span class="p">,</span> <span class="n">ytr</span><span class="p">,</span> <span class="n">yte</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span> <span class="n">stratify</span><span class="o">=</span><span class="n">y</span><span class="p">)</span>
+
+<span class="n">scaler</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span>
+<span class="n">scaler</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">Xtr</span><span class="p">)</span>
+
+<span class="n">Xtr</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Xtr</span><span class="p">)</span>
+<span class="n">Xte</span> <span class="o">=</span> <span class="n">scaler</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">Xte</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Training-the-models">
+<h2>Training the models<a class="headerlink" href="#Training-the-models" title="Link to this heading"></a></h2>
+<p>We train a kNN and a logistic regression. Here, we can see that the logistic regression outperformes the kNN.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">KNeighborsClassifier</span><span class="p">(</span><span class="n">n_neighbors</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">)</span>
+<span class="n">preds_knn</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">Xte</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">LogisticRegression</span><span class="p">(</span><span class="n">C</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">Xtr</span><span class="p">,</span> <span class="n">ytr</span><span class="p">)</span>
+<span class="n">preds_lr</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">Xte</span><span class="p">)[:,</span> <span class="mi">1</span><span class="p">]</span>
+
+
+<span class="n">auc_knn</span><span class="p">,</span> <span class="n">auc_lr</span> <span class="o">=</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span> <span class="n">preds_knn</span><span class="p">),</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span> <span class="n">preds_lr</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;kNN AUC: </span><span class="si">{</span><span class="n">auc_knn</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2"> / LR AUC: </span><span class="si">{</span><span class="n">auc_lr</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+kNN AUC: 0.9728 / LR AUC: 0.9888
+</pre></div></div>
+</div>
+</section>
+<section id="Statistical-testing">
+<h2>Statistical testing<a class="headerlink" href="#Statistical-testing" title="Link to this heading"></a></h2>
+<p>As stated in the documentation, the testing routine returns the <code class="docutils literal notranslate"><span class="pre">dict</span></code> of <code class="docutils literal notranslate"><span class="pre">tuple</span></code>. The keys in the dict are the metric tags, and the values are tuples that store the data in the following format:</p>
+<ul class="simple">
+<li><p>p-value (<span class="math notranslate nohighlight">\(H_0: model_1 = model_2\)</span>)</p></li>
+<li><p>Empirical value (model 1)</p></li>
+<li><p>CI low (model 1)</p></li>
+<li><p>CI high (model 1)</p></li>
+<li><p>Empirical value (model 2)</p></li>
+<li><p>CI low (model 2)</p></li>
+<li><p>CI high (model 2)</p></li>
+</ul>
+<p>If you launch the code in Binder, decrease the number of bootstrap iterations (<code class="docutils literal notranslate"><span class="pre">10000</span></code> by default).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">testing_result</span> <span class="o">=</span> <span class="n">stambo</span><span class="o">.</span><span class="n">compare_models</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span> <span class="n">preds_knn</span><span class="p">,</span> <span class="n">preds_lr</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;ROCAUC&quot;</span><span class="p">,</span> <span class="s2">&quot;AP&quot;</span><span class="p">,</span> <span class="s2">&quot;QKappa&quot;</span><span class="p">,</span> <span class="s2">&quot;BACC&quot;</span><span class="p">,</span> <span class="s2">&quot;MCC&quot;</span><span class="p">),</span> <span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">,</span> <span class="n">n_bootstrap</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Bootstrapping: 100%|██████████| 1000/1000 [00:03&lt;00:00, 279.93it/s]
+</pre></div></div>
+</div>
+<p>If we want to visualize the testing results, they are available in a dict in the format we have described above:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">testing_result</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;ROCAUC&#39;: array([0.02597403, 0.01607463, 0.00116143, 0.03622366, 0.97275219,
+        0.94904937, 0.99252755, 0.98882682, 0.97478143, 0.99825874]),
+ &#39;AP&#39;: array([0.003996  , 0.02314431, 0.00502882, 0.04678529, 0.9689868 ,
+        0.94193877, 0.99255722, 0.99213111, 0.9810929 , 0.99893794]),
+ &#39;QKappa&#39;: array([ 0.08591409, -0.0320894 , -0.07893126,  0.00764438,  0.90810898,
+         0.85387269,  0.95589713,  0.87601958,  0.81299213,  0.93027112]),
+ &#39;BACC&#39;: array([ 0.06393606, -0.02079161, -0.04718104,  0.00252861,  0.94531991,
+         0.91380672,  0.97414673,  0.9245283 ,  0.88886054,  0.95691282]),
+ &#39;MCC&#39;: array([ 0.19180819, -0.02795235, -0.07123844,  0.0096027 ,  0.91078326,
+         0.86011542,  0.95680034,  0.88283091,  0.82759216,  0.93254094])}
+</pre></div></div>
+</div>
+<p>Most commonly, we though want to visualize them in a report, paper, or a presentation. For that, we can use a function <code class="docutils literal notranslate"><span class="pre">to_latex</span></code>, and get a cut-and-paste <code class="docutils literal notranslate"><span class="pre">tabular</span></code>. To use it in a LaTeX document, one needs to not forget to import booktabs</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">stambo</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">testing_result</span><span class="p">,</span> <span class="n">m1_name</span><span class="o">=</span><span class="s2">&quot;kNN&quot;</span><span class="p">,</span> <span class="n">m2_name</span><span class="o">=</span><span class="s2">&quot;LR&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+% \usepackage{booktabs} &lt;-- do not forget to have this imported.
+\begin{tabular}{llllll} \\
+\toprule
+\textbf{Model} &amp; \textbf{ROCAUC} &amp; \textbf{AP} &amp; \textbf{QKappa} &amp; \textbf{BACC} &amp; \textbf{MCC} \\
+\midrule
+kNN &amp; $0.97$ [$0.95$-$0.99$] &amp; $0.97$ [$0.94$-$0.99$] &amp; $0.91$ [$0.85$-$0.96$] &amp; $0.95$ [$0.91$-$0.97$] &amp; $0.91$ [$0.86$-$0.96$] \\
+LR &amp; $0.99$ [$0.97$-$1.00$] &amp; $0.99$ [$0.98$-$1.00$] &amp; $0.88$ [$0.81$-$0.93$] &amp; $0.92$ [$0.89$-$0.96$] &amp; $0.88$ [$0.83$-$0.93$] \\
+\midrule
+Effect size &amp; $0.02$ [$0.00$-$0.04]$ &amp; $0.02$ [$0.01$-$0.05]$ &amp; $-0.03$ [$-0.08$-$0.01]$ &amp; $-0.02$ [$-0.05$-$0.00]$ &amp; $-0.03$ [$-0.07$-$0.01]$ \\
+\midrule
+$p$-value &amp; $0.03$ &amp; $0.00$ &amp; $0.09$ &amp; $0.06$ &amp; $0.19$ \\
+\bottomrule
+\end{tabular}
+</pre></div></div>
+</div>
+</section>
+<section id="Own-metrics">
+<h2>Own metrics<a class="headerlink" href="#Own-metrics" title="Link to this heading"></a></h2>
+<p>Sometimes, having default metrics is not enough, and one may want to have some additional metrics. Let us define an F2 score.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">fbeta_score</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="kn">from</span> <span class="nn">stambo.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">F2Score</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">fbeta_score</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;F2Score&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">testing_result</span> <span class="o">=</span> <span class="n">stambo</span><span class="o">.</span><span class="n">compare_models</span><span class="p">(</span><span class="n">yte</span><span class="p">,</span> <span class="n">preds_knn</span><span class="p">,</span> <span class="n">preds_lr</span><span class="p">,</span>
+                                       <span class="p">(</span><span class="s2">&quot;ROCAUC&quot;</span><span class="p">,</span> <span class="s2">&quot;AP&quot;</span><span class="p">,</span> <span class="n">F2Score</span><span class="p">()),</span><span class="n">seed</span><span class="o">=</span><span class="n">SEED</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Bootstrapping: 100%|██████████| 10000/10000 [00:27&lt;00:00, 369.94it/s]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">stambo</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">testing_result</span><span class="p">,</span> <span class="n">m1_name</span><span class="o">=</span><span class="s2">&quot;kNN&quot;</span><span class="p">,</span> <span class="n">m2_name</span><span class="o">=</span><span class="s2">&quot;LR&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+% \usepackage{booktabs} &lt;-- do not forget to have this imported.
+\begin{tabular}{llll} \\
+\toprule
+\textbf{Model} &amp; \textbf{ROCAUC} &amp; \textbf{AP} &amp; \textbf{F2Score} \\
+\midrule
+kNN &amp; $0.97$ [$0.95$-$0.99$] &amp; $0.97$ [$0.94$-$0.99$] &amp; $0.98$ [$0.97$-$0.99$] \\
+LR &amp; $0.99$ [$0.98$-$1.00$] &amp; $0.99$ [$0.98$-$1.00$] &amp; $0.98$ [$0.97$-$0.99$] \\
+\midrule
+Effect size &amp; $0.02$ [$0.00$-$0.03]$ &amp; $0.02$ [$0.00$-$0.05]$ &amp; $-0.00$ [$-0.01$-$0.01]$ \\
+\midrule
+$p$-value &amp; $0.04$ &amp; $0.01$ &amp; $0.82$ \\
+\bottomrule
+\end{tabular}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">testing_result</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;ROCAUC&#39;: array([3.73962604e-02, 1.60746284e-02, 6.65903429e-04, 3.46571565e-02,
+        9.72752187e-01, 9.49497066e-01, 9.92339013e-01, 9.88826816e-01,
+        9.75220895e-01, 9.97773542e-01]),
+ &#39;AP&#39;: array([0.00659934, 0.02314431, 0.00493627, 0.04595217, 0.9689868 ,
+        0.94205306, 0.9918646 , 0.99213111, 0.9814529 , 0.99873236]),
+ &#39;F2Score&#39;: array([ 8.22917708e-01, -9.88531818e-04, -1.01762084e-02,  1.06433115e-02,
+         9.83425414e-01,  9.70654628e-01,  9.93265993e-01,  9.82436883e-01,
+         9.72877358e-01,  9.90415335e-01])}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">stambo</span><span class="o">.</span><span class="n">to_latex</span><span class="p">(</span><span class="n">testing_result</span><span class="p">,</span> <span class="n">m1_name</span><span class="o">=</span><span class="s2">&quot;kNN&quot;</span><span class="p">,</span> <span class="n">m2_name</span><span class="o">=</span><span class="s2">&quot;LR&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+% \usepackage{booktabs} &lt;-- do not forget to have this imported.
+\begin{tabular}{llll} \\
+\toprule
+\textbf{Model} &amp; \textbf{ROCAUC} &amp; \textbf{AP} &amp; \textbf{F2Score} \\
+\midrule
+kNN &amp; $0.97$ [$0.95$-$0.99$] &amp; $0.97$ [$0.94$-$0.99$] &amp; $0.98$ [$0.97$-$0.99$] \\
+LR &amp; $0.99$ [$0.98$-$1.00$] &amp; $0.99$ [$0.98$-$1.00$] &amp; $0.98$ [$0.97$-$0.99$] \\
+\midrule
+Effect size &amp; $0.02$ [$0.00$-$0.03]$ &amp; $0.02$ [$0.00$-$0.05]$ &amp; $-0.00$ [$-0.01$-$0.01]$ \\
+\midrule
+$p$-value &amp; $0.04$ &amp; $0.01$ &amp; $0.82$ \\
+\bottomrule
+\end{tabular}
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="metrics.html" class="btn btn-neutral float-left" title="Metrics" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Classification_non_iid.html" class="btn btn-neutral float-right" title="Classification &amp; non-i.i.d. data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-now, Aleksei Tiulpin.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+    var versions_json_url = ''
+</script>
+
+<div class="rst-versions" data-toggle="rst-versions" role="note"
+     aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"></span>
+        v0.1.4
+      <span class="fa fa-caret-down"></span>
+    </span>
+
+    <div class="rst-other-versions">
+        <dl id="versionselector">
+            <dt>Other Versions</dt>
+        </dl>
+
+    </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
