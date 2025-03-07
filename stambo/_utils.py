@@ -1,5 +1,4 @@
 from tqdm import tqdm
-import sys
 from typing import Iterable, Dict, Tuple, Optional
 
 def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> tqdm:
