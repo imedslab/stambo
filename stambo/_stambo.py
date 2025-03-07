@@ -11,8 +11,10 @@ from . import metrics as metricslib
 def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper], 
                     sample_2: Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper], 
                     statistics: Dict[str, Callable]=None, 
+                    groups: Optional[npt.NDArray[np.int64]]=None,
                     alpha: float=0.05, 
                     n_bootstrap: int=10000, seed: int=None, 
+                    non_paired: bool=False,
                     silent: bool=False) -> Dict[str, Tuple[float]]:
     """Compares whether the empirical difference of statistics computed own two samples is statistically significant or not.
     Note that the statistics are computed independently, and should thus be treated independently.
@@ -20,9 +22,11 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
     Args:
         sample_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]): Sample 1 to be compared
         sample_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]): Sample 2 to be compared
+        groups (Optional[npt.NDArray[np.int64]]): Groups indicating the subject for each measurement.
         statistics (Dict[str, Callable]): Statistics to compare the samples by.
         alpha (float, optional): A significance level for confidence intervals (from 0 to 1).
         n_bootstrap (int, optional): The number of bootstrap iterations. Defaults to 10000.
+        non_paired (bool, optional): Whether to use a non-paired design. Defaults to False.
         seed (int, optional): Random seed. Defaults to None.
         silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
@@ -50,10 +54,34 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
 
     # Dict to store the null bootstrap distribution
     result = {s_tag: np.zeros((n_bootstrap, 2)) for s_tag in statistics}
+    
+    if groups is not None:
+        assert len(groups) == len(sample_1), "Groups must be of the same length as the samples"
+        assert len(groups) == len(sample_2), "Groups must be of the same length as the samples"
+        assert not non_paired, "Paired design must be used when groups are provided"
+        
+    group_data = {}
+    if groups is not None:
+        groups_ids = np.unique(groups)
+        for group_id in groups_ids:
+            group_data[group_id] = {"indices": np.where(groups == group_id)[0]}
 
     for bootstrap_iter in pbar(range(n_bootstrap), total=n_bootstrap, desc="Bootstrapping", silent=silent):
-        ind1 = np.random.choice(len(sample_1), len(sample_1), replace=True)
-        ind2 = np.random.choice(len(sample_1), len(sample_1), replace=True)
+        # We are here in a paired design, so we need to sample the same indices for both samples
+        if groups is None:
+            ind = np.random.choice(len(sample_1), len(sample_1), replace=True)
+            ind1 = ind
+            ind2 = ind
+            if non_paired:
+                ind2 = np.random.choice(len(sample_2), len(sample_2), replace=True)
+        else:
+            # When we have groups, we need to sample them with replacement
+            groups_ind = np.random.choice(groups_ids, len(sample_1), replace=True)
+            # Once the groups are sampled, we can concatenate the indices
+            ind = np.concatenate([group_data[grp]["indices"] for grp in groups_ind])
+            ind1 = ind
+            ind2 = ind
+            
         for s_tag in statistics:
             result[s_tag][bootstrap_iter, 0] = statistics[s_tag](sample_1[ind1])
             result[s_tag][bootstrap_iter, 1] = statistics[s_tag](sample_2[ind2])
@@ -90,7 +118,7 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
                    alpha: Optional[float]=0.05, 
                    n_bootstrap: int=10000, seed: int=None, 
                    silent: bool=False) -> Dict[str, Tuple[float]]:
-    """Compares predictions from two models :math:`f_1(x)` and :math:`f_1(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}` 
+    """Compares predictions from two models :math:`f_1(x)` and :math:`f_2(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}` 
     with a two-tailed bootstrap hypothesis test.
     
     I.e., we state the following null and alternative hypotheses:

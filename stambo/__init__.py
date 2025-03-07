@@ -1,4 +1,4 @@
-__version__ = "0.1.3"
+__version__ = "0.1.4"
 
 __all__ = ["metrics", "synthetic", "compare_models", "two_sample_test", "to_latex"]
 

@@ -18,7 +18,7 @@ description = """A python package for statistical comparison of machine learning
 
 setup(
     author="Aleksei Tiulpin",
-    author_email="aleksei@gmail.com",
+    author_email="aleksei.tiulpin@gmail.com",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Science/Research",
@@ -44,6 +44,6 @@ setup(
     test_suite="tests",
     tests_require=test_requirements,
     url="https://github.com/imedslab/stambo",
-    version="0.1.3",
+    version="0.1.4",
     zip_safe=False,
 )

@@ -3,6 +3,16 @@ import sys
 from typing import Iterable, Dict, Tuple, Optional
 
 def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> tqdm:
+    """Progress bar wrapper.
+    
+    Args:
+        iterable (Iterable): The iterable to wrap.
+        total (int): The total number of iterations.
+        desc (str): The description of the progress bar.
+        silent (bool, optional): Whether to suppress the progress bar. Defaults to False.
+    Returns:
+        [tqdm, Iterable]: The progress bar if silent is False, otherwise the iterable.
+    """
     if silent:
         return iterable
     return tqdm(iterable, total=total, desc=desc)
@@ -21,7 +31,7 @@ def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_na
         str: A cut-and-paste LaTeX table in tabular environment.
     """
     # Format: three rows: one per metric, another per model
-    tbl = "% \\usepackage{booktabs} <-- do not for get to have this imported. \n"
+    tbl = "% \\usepackage{booktabs} <-- do not forget to have this imported. \n"
     tbl += "\\begin{tabular}{" + "l"*(1 + len(report)) + "} \\\\ \n"
     tbl += "\\toprule \n"
     tbl += "\\textbf{Model}"
