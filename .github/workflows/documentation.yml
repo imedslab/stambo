@@ -27,6 +27,8 @@ jobs:
         conda env update --file env.yml --name base
     - name: Build docs
       run: |
+        conda activate base
+        pip install -e .
         cd docs && make html
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
