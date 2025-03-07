@@ -6,7 +6,7 @@
 from setuptools import find_packages, setup
 
 
-requirements = ["numpy>=2.0.0", "scikit-learn>=1.3.0", "tqdm>=4.0.0"]
+requirements = ["numpy>=2.0.0", "scikit-learn>=1.3.0", "tqdm>=4.0.0", "matplotlib>=3.9.4"]
 
 setup_requirements = ()
 

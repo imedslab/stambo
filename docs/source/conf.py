@@ -10,15 +10,16 @@
 import sys
 import os
 import msmb_theme
+from stambo import __version__
 
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../notebooks'))
 
 project = 'stambo'
-copyright = '2024, Aleksei Tiulpin'
+copyright = '2024-now, Aleksei Tiulpin'
 author = 'Aleksei Tiulpin'
-version = "0.1"
-release = f"v{version}.3"
+version = __version__
+release = f"v{version}"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

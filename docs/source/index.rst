@@ -29,5 +29,8 @@ Welcome to stambo's documentation!
    :caption: Examples:
 
    Classification
-   Two_sample_test
+   Classification_non_iid
    Regression
+   Two_sample_test
+
+
