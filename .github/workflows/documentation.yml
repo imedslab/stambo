@@ -24,12 +24,15 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
+        sudo apt-get install -y libarchive-dev
+        conda update --all
         conda env update --file env.yml --name base
-        conda activate base
         pip install -e .
+    - name: Upgrade typing_extensions
+      run: |
+        pip install --upgrade typing_extensions
     - name: Build docs
       run: |
-        conda activate base
         cd docs && make html
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
