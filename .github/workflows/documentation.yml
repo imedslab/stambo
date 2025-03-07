@@ -25,10 +25,11 @@ jobs:
     - name: Install dependencies
       run: |
         conda env update --file env.yml --name base
+        conda activate base
+        pip install -e .
     - name: Build docs
       run: |
         conda activate base
-        pip install -e .
         cd docs && make html
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
@@ -38,5 +39,3 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/build/html
         force_orphan: true
-
-
