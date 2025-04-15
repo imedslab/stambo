@@ -19,7 +19,8 @@ def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> tqdm:
 def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_name: Optional[str]="M2", n_digits: int=2) -> str:
     """Converts a report returned by StamBO into a LaTeX table for convenient viewing.
     
-        Note: the p-value is the left-sided p-value. The alternative hypothesis is that the second model
+    Note: The alternative hypothesis is that the second model is different from the first model. 
+    The p-value is the two-tailed p-value.
         
     Args:
         report (Dict[str, Tuple[float]]): A dictionary with metrics. Use the stambo-generated format.

@@ -1,8 +1,9 @@
 Main functionality
 =====================
 
-We currently have two main functions: one that does just a two- and one-tailed bootstrap test, 
-and another one that comapres two machine learning models evaluated on a test set.
+We perform a two-tailed bootstrap test, comparing two samples using pre-defined statistics.
+The library works so that the user provides a function that computes the statistic of interest,
+and predictions of two models on a test set. 
 
 .. automodule:: stambo
     :members:

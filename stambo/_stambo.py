@@ -158,7 +158,7 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
         silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the left-sided p-value. 
+        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the two-tailed p-value. 
                             The expected format in the output in every dict entry is:
 
                             * Two sided :math:`p`-value
