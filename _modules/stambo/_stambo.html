@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stambo._stambo &mdash; stambo v0.1.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/msmb.css?v=51bd699f" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=0636b7af"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/js/versions.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+          </a>
+              <div class="version">
+                0.1.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Welcome to stambo’s documentation!</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../stambo.html">Main functionality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../metrics.html">Metrics</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Classification.html">Comparing two classification models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Classification_non_iid.html">Classification &amp; non-i.i.d. data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Regression.html">Comparing two regression models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Two_sample_test.html">Comparing two samples using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">stambo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">stambo._stambo</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for stambo._stambo</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">import</span> <span class="nn">numpy.typing</span> <span class="k">as</span> <span class="nn">npt</span>
+
+<span class="kn">from</span> <span class="nn">._utils</span> <span class="kn">import</span> <span class="n">pbar</span>
+<span class="kn">from</span> <span class="nn">._predsamplewrapper</span> <span class="kn">import</span> <span class="n">PredSampleWrapper</span>
+<span class="kn">from</span> <span class="nn">.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">metrics</span> <span class="k">as</span> <span class="n">metricslib</span>
+
+<div class="viewcode-block" id="two_sample_test">
+<a class="viewcode-back" href="../../stambo.html#stambo.two_sample_test">[docs]</a>
+<span class="k">def</span> <span class="nf">two_sample_test</span><span class="p">(</span><span class="n">sample_1</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">PredSampleWrapper</span><span class="p">],</span> 
+                    <span class="n">sample_2</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">PredSampleWrapper</span><span class="p">],</span> 
+                    <span class="n">statistics</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Callable</span><span class="p">],</span> 
+                    <span class="n">groups</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
+                    <span class="n">n_bootstrap</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                    <span class="n">non_paired</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">silent</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compares whether the empirical difference of statistics computed own two samples is statistically significant or not.</span>
+<span class="sd">    Note that the statistics are computed independently, and should thus be treated independently.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        sample_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]): Sample 1 to be compared</span>
+<span class="sd">        sample_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]): Sample 2 to be compared</span>
+<span class="sd">        groups (Optional[npt.NDArray[np.int64]]): Groups indicating the subject for each measurement.</span>
+<span class="sd">        statistics (Dict[str, Callable]): Statistics to compare the samples by.</span>
+<span class="sd">        alpha (float, optional): A significance level for confidence intervals (from 0 to 1).</span>
+<span class="sd">        n_bootstrap (int, optional): The number of bootstrap iterations. Defaults to 10000.</span>
+<span class="sd">        non_paired (bool, optional): Whether to use a non-paired design. Defaults to False.</span>
+<span class="sd">        seed (int, optional): Random seed. Defaults to None.</span>
+<span class="sd">        silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the p-value. </span>
+<span class="sd">                            The expected format in the output in every dict entry is: </span>
+<span class="sd">                            </span>
+<span class="sd">                            * two-sided p-value</span>
+<span class="sd">                            * observed difference (effect size)</span>
+<span class="sd">                            * CI low (effect size)</span>
+<span class="sd">                            * CI high (effect size)</span>
+<span class="sd">                            * empirical value (sample 1), </span>
+<span class="sd">                            * CI low (sample 1)</span>
+<span class="sd">                            * CI high (sample 1)</span>
+<span class="sd">                            * empirical value (sample 2), </span>
+<span class="sd">                            * CI low (sample 2)</span>
+<span class="sd">                            * CI high (sample 2).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="k">if</span> <span class="n">seed</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+
+    <span class="n">alpha</span> <span class="o">=</span> <span class="mi">100</span> <span class="o">*</span> <span class="n">alpha</span>
+
+
+    <span class="c1"># Dict to store the null bootstrap distribution</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="p">{</span><span class="n">s_tag</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_bootstrap</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="k">for</span> <span class="n">s_tag</span> <span class="ow">in</span> <span class="n">statistics</span><span class="p">}</span>
+    
+    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_1</span><span class="p">),</span> <span class="s2">&quot;Groups must be of the same length as the samples&quot;</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_2</span><span class="p">),</span> <span class="s2">&quot;Groups must be of the same length as the samples&quot;</span>
+        <span class="k">assert</span> <span class="ow">not</span> <span class="n">non_paired</span><span class="p">,</span> <span class="s2">&quot;Paired design must be used when groups are provided&quot;</span>
+        
+    <span class="n">group_data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">groups_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">groups</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">group_id</span> <span class="ow">in</span> <span class="n">groups_ids</span><span class="p">:</span>
+            <span class="n">group_data</span><span class="p">[</span><span class="n">group_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">groups</span> <span class="o">==</span> <span class="n">group_id</span><span class="p">)[</span><span class="mi">0</span><span class="p">]}</span>
+
+    <span class="k">for</span> <span class="n">bootstrap_iter</span> <span class="ow">in</span> <span class="n">pbar</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_bootstrap</span><span class="p">),</span> <span class="n">total</span><span class="o">=</span><span class="n">n_bootstrap</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s2">&quot;Bootstrapping&quot;</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">):</span>
+        <span class="c1"># We are here in a paired design, so we need to sample the same indices for both samples</span>
+        <span class="k">if</span> <span class="n">groups</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_1</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_1</span><span class="p">),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">ind1</span> <span class="o">=</span> <span class="n">ind</span>
+            <span class="n">ind2</span> <span class="o">=</span> <span class="n">ind</span>
+            <span class="k">if</span> <span class="n">non_paired</span><span class="p">:</span>
+                <span class="n">ind2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sample_2</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_2</span><span class="p">),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># When we have groups, we need to sample them with replacement</span>
+            <span class="n">groups_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="n">groups_ids</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">sample_1</span><span class="p">),</span> <span class="n">replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="c1"># Once the groups are sampled, we can concatenate the indices</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">group_data</span><span class="p">[</span><span class="n">grp</span><span class="p">][</span><span class="s2">&quot;indices&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">groups_ind</span><span class="p">])</span>
+            <span class="n">ind1</span> <span class="o">=</span> <span class="n">ind</span>
+            <span class="n">ind2</span> <span class="o">=</span> <span class="n">ind</span>
+            
+        <span class="k">for</span> <span class="n">s_tag</span> <span class="ow">in</span> <span class="n">statistics</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][</span><span class="n">bootstrap_iter</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">[</span><span class="n">s_tag</span><span class="p">](</span><span class="n">sample_1</span><span class="p">[</span><span class="n">ind1</span><span class="p">])</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][</span><span class="n">bootstrap_iter</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">[</span><span class="n">s_tag</span><span class="p">](</span><span class="n">sample_2</span><span class="p">[</span><span class="n">ind2</span><span class="p">])</span>
+    
+    <span class="n">result_final</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">s_tag</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+        <span class="n">emp_s1</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">[</span><span class="n">s_tag</span><span class="p">](</span><span class="n">sample_1</span><span class="p">)</span>
+        <span class="n">emp_s2</span> <span class="o">=</span> <span class="n">statistics</span><span class="p">[</span><span class="n">s_tag</span><span class="p">](</span><span class="n">sample_2</span><span class="p">)</span> 
+
+        <span class="n">observed</span> <span class="o">=</span> <span class="n">emp_s2</span> <span class="o">-</span> <span class="n">emp_s1</span>
+        <span class="c1"># Generaing the null</span>
+        <span class="n">null</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">observed</span>
+        <span class="n">cdf_left</span> <span class="o">=</span> <span class="p">((</span><span class="n">null</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="n">observed</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">+</span> <span class="mf">1.</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">n_bootstrap</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">p_val</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="nb">min</span><span class="p">(</span><span class="n">cdf_left</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">cdf_left</span><span class="p">)</span>
+        <span class="c1"># Compute the standardized effect size</span>
+        <span class="n">es_bs</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># We also want to compute the confidence intervals</span>
+        <span class="c1"># In this version of STAMBO, we use the simple percentile method</span>
+        <span class="c1"># In the future, we will implement the BCa approach</span>
+        <span class="n">ci_es</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">es_bs</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">es_bs</span><span class="p">,</span> <span class="mi">100</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">))</span>
+        <span class="n">ci_s1</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">],</span> <span class="mi">100</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">))</span>
+        <span class="n">ci_s2</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="n">s_tag</span><span class="p">][:,</span> <span class="mi">1</span><span class="p">],</span> <span class="mi">100</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mf">2.</span><span class="p">))</span>
+        <span class="c1"># And we report the p-value, empirical values, as well as the confidence intervals. </span>
+        <span class="c1"># The the format in the documentation.</span>
+        <span class="n">result_final</span><span class="p">[</span><span class="n">s_tag</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">p_val</span><span class="p">,</span> <span class="n">observed</span><span class="p">,</span> <span class="n">ci_es</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ci_es</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">emp_s1</span><span class="p">,</span> <span class="n">ci_s1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ci_s1</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">emp_s2</span><span class="p">,</span> <span class="n">ci_s2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ci_s2</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">result_final</span><span class="p">[</span><span class="n">s_tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result_final</span><span class="p">[</span><span class="n">s_tag</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">result_final</span></div>
+
+
+
+<div class="viewcode-block" id="compare_models">
+<a class="viewcode-back" href="../../stambo.html#stambo.compare_models">[docs]</a>
+<span class="k">def</span> <span class="nf">compare_models</span><span class="p">(</span><span class="n">y_test</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> 
+                   <span class="n">preds_1</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> 
+                   <span class="n">preds_2</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> 
+                   <span class="n">metrics</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Metric</span><span class="p">]],</span>
+                   <span class="n">groups</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">alpha</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
+                   <span class="n">n_bootstrap</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                   <span class="n">silent</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Compares predictions from two models :math:`f_1(x)` and :math:`f_2(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}` </span>
+<span class="sd">    with a two-tailed bootstrap hypothesis test.</span>
+<span class="sd">    </span>
+<span class="sd">    I.e., we state the following null and alternative hypotheses:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        H_0: M(y_{gt}, \hat y_{1}) = M(y_{gt}, \hat y_{2})</span>
+
+<span class="sd">        H_1: M(y_{gt}, \hat y_{1}) != M(y_{gt}, \hat y_{2}),</span>
+
+<span class="sd">    where :math:`M` is a metric, :math:`y_{gt}` is the vector of ground truth labels, </span>
+<span class="sd">    and :math:`\hat y_{i}, i=1,2` are the vectors of predictions for model 1 and 2, respectively. </span>
+<span class="sd">    Such kind of testing is performed for every specified metric. </span>
+<span class="sd">    </span>
+<span class="sd">    By default, the function assumes that the metrics are defined as more is better (e.g. accuracy, AUC, and others). </span>
+<span class="sd">    If you work with metrics that are defined as less is better, just swap the models (preds_1 and preds_2) in the function call.</span>
+<span class="sd">    </span>
+<span class="sd">    While the test does return you the :math:`p`-value, one should be careful about its interpretation: the :math:`p`-value </span>
+<span class="sd">    is the probability of observing the test statistic *at least as extreme* as the one obtained assuming that:math:`H_0` is true (probability of Type II error).</span>
+<span class="sd">    With large data, even small effects can be statistically significant, so one should consider the effect size. </span>
+<span class="sd">    </span>
+<span class="sd">    We compute a standardized effect size using the estimated bootstrap variance.</span>
+
+<span class="sd">    Beyond the hypothesis testing, the function also returns confidence intervals per metric, i.e. :math:`[M(y_{gt}, \hat y)_{(\\alpha / 2)}, M(y_{gt}, \hat y)_{(1 - \\alpha / 2)}]`. At this moment, </span>
+<span class="sd">    the confidence intervals are computed using the simple percentile method. In the future, we will implement the BCa approach, which is more accurate.</span>
+<span class="sd">    </span>
+<span class="sd">    Args:</span>
+<span class="sd">        y_test (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Ground truth</span>
+<span class="sd">        preds_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Prediction from model 1</span>
+<span class="sd">        preds_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Prediction from model 2</span>
+<span class="sd">        metrics (Tuple[Union[str, Metric]]): A set of metrics to call. Here, the user either specifies the metrics available from the stambo library (``stambo.metrics``), or adds an instance of the custom-defined metrics.</span>
+<span class="sd">        groups (Optional[npt.NDArray[np.int64]]): Groups indicating the subject for each measurement.</span>
+<span class="sd">        alpha (float, optional): A significance level for confidence intervals (from 0 to 1).</span>
+<span class="sd">        n_bootstrap (int, optional): The number of bootstrap iterations. Defaults to 10000.</span>
+<span class="sd">        seed (int, optional): Random seed. Defaults to None.</span>
+<span class="sd">        silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the two-tailed p-value. </span>
+<span class="sd">                            The expected format in the output in every dict entry is:</span>
+
+<span class="sd">                            * Two sided :math:`p`-value</span>
+<span class="sd">                            * Observed difference (effect size)</span>
+<span class="sd">                            * Effect size CI low</span>
+<span class="sd">                            * Effect size CI high</span>
+<span class="sd">                            * :math:`M(y_{gt}, \hat y_{1})`</span>
+<span class="sd">                            * :math:`M(y_{gt}, \hat y_{1})_{(\\alpha / 2)}`</span>
+<span class="sd">                            * :math:`M(y_{gt}, \hat y_{1})_{(1 - \\alpha / 2)}`</span>
+<span class="sd">                            * :math:`M(y_{gt}, \hat y_{1})`</span>
+<span class="sd">                            * :math:`M(y_{gt}, \hat y_{2})_{(\\alpha / 2)}`</span>
+<span class="sd">                            * :math:`M(y_{gt}, \hat y_{2})_{(1 - \\alpha / 2)}`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Data samples need to be prepared</span>
+    <span class="n">sample_1</span> <span class="o">=</span> <span class="n">PredSampleWrapper</span><span class="p">(</span><span class="n">preds_1</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">multiclass</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">preds_1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">sample_2</span> <span class="o">=</span> <span class="n">PredSampleWrapper</span><span class="p">(</span><span class="n">preds_2</span><span class="p">,</span> <span class="n">y_test</span><span class="p">,</span> <span class="n">multiclass</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">preds_1</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">metrics_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">metrics</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="n">Metric</span><span class="p">):</span>
+            <span class="n">metrics_dict</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">metric</span><span class="p">)]</span> <span class="o">=</span> <span class="n">metric</span> <span class="c1"># note that the object must be instantiated</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">metric</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">metricslib</span><span class="p">,</span> <span class="n">metric</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Metric </span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2"> is not defined&quot;</span>
+            <span class="n">metrics_dict</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">metricslib</span><span class="p">,</span> <span class="n">metric</span><span class="p">)()</span>
+
+    <span class="n">test_results</span> <span class="o">=</span> <span class="n">two_sample_test</span><span class="p">(</span><span class="n">sample_1</span><span class="p">,</span> <span class="n">sample_2</span><span class="p">,</span> <span class="n">statistics</span><span class="o">=</span><span class="n">metrics_dict</span><span class="p">,</span> <span class="n">groups</span><span class="o">=</span><span class="n">groups</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="n">alpha</span><span class="p">,</span> <span class="n">n_bootstrap</span><span class="o">=</span><span class="n">n_bootstrap</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">non_paired</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">silent</span><span class="o">=</span><span class="n">silent</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">test_results</span><span class="p">:</span>
+        <span class="n">output</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span> <span class="o">=</span> <span class="n">test_results</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">output</span></div>
+
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-now, Aleksei Tiulpin.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+    var versions_json_url = ''
+</script>
+
+<div class="rst-versions" data-toggle="rst-versions" role="note"
+     aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"></span>
+        v0.1.4
+      <span class="fa fa-caret-down"></span>
+    </span>
+
+    <div class="rst-other-versions">
+        <dl id="versionselector">
+            <dt>Other Versions</dt>
+        </dl>
+
+    </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

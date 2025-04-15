@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>stambo.metrics &mdash; stambo v0.1.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/msmb.css?v=51bd699f" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=0636b7af"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script src="../../_static/js/versions.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+          </a>
+              <div class="version">
+                0.1.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Welcome to stambo’s documentation!</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../stambo.html">Main functionality</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../metrics.html">Metrics</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../Classification.html">Comparing two classification models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Classification_non_iid.html">Classification &amp; non-i.i.d. data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Regression.html">Comparing two regression models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../Two_sample_test.html">Comparing two samples using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">stambo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">stambo.metrics</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for stambo.metrics</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span>
+
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_auc_score</span><span class="p">,</span> <span class="n">average_precision_score</span><span class="p">,</span> <span class="n">f1_score</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">cohen_kappa_score</span><span class="p">,</span> <span class="n">balanced_accuracy_score</span><span class="p">,</span> <span class="n">matthews_corrcoef</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_absolute_error</span><span class="p">,</span> <span class="n">mean_squared_error</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+
+<span class="kn">from</span> <span class="nn">._predsamplewrapper</span> <span class="kn">import</span> <span class="n">PredSampleWrapper</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Metric&quot;</span><span class="p">,</span> <span class="s2">&quot;ROCAUC&quot;</span><span class="p">,</span> <span class="s2">&quot;AP&quot;</span><span class="p">,</span> <span class="s2">&quot;F1Score&quot;</span><span class="p">,</span> <span class="s2">&quot;QKappa&quot;</span><span class="p">,</span> <span class="s2">&quot;BACC&quot;</span><span class="p">,</span> <span class="s2">&quot;MCC&quot;</span><span class="p">,</span> <span class="s2">&quot;MSE&quot;</span><span class="p">,</span> <span class="s2">&quot;MAE&quot;</span><span class="p">]</span>
+
+<span class="c1"># Base metric class</span>
+<div class="viewcode-block" id="Metric">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.Metric">[docs]</a>
+<span class="k">class</span> <span class="nc">Metric</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A wrapper for metrics that take predictions and ground truth labels as two arguments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">int_input</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Constructor of the metric wrapper class</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            metric (Callable): The metric of choice. The typical ones are ROC-AUC, Average precision etc. </span>
+<span class="sd">            See more in the https://scikit-learn.org/stable/modules/model_evaluation.html#classification-metrics.</span>
+<span class="sd">            int_input (bool, optional): Defines whether the metric takes predictions as integers. Defaults to False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metric</span> <span class="o">=</span> <span class="n">metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">int_input</span> <span class="o">=</span> <span class="n">int_input</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">:</span> <span class="n">PredSampleWrapper</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The call method. This runs the metric on the supplied data. If the metric is meanto to be run on integer input.</span>
+<span class="sd">        it wil use the argmaxed predictions that are stored by the `PredSampleWrapper` object.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            sample (PredSampleWrapper): Data on which the metric is computed. </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            float: Metric value. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">int_input</span><span class="p">:</span> <span class="c1"># Handling the case when the metric expects an integer input, i.e. cohen&#39;s cappa</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">gt</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">predictions_am</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">gt</span><span class="p">,</span> <span class="n">sample</span><span class="o">.</span><span class="n">predictions</span><span class="p">)</span></div>
+
+    
+<span class="c1"># Classification metrics</span>
+<div class="viewcode-block" id="ROCAUC">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.ROCAUC">[docs]</a>
+<span class="k">class</span> <span class="nc">ROCAUC</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The ROC-AUC metric. Defined for Binary classifiers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">roc_auc_score</span><span class="p">,</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;ROCAUC&quot;</span></div>
+
+
+<div class="viewcode-block" id="AP">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.AP">[docs]</a>
+<span class="k">class</span> <span class="nc">AP</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The Average Precision metric. Defined for Binary classifiers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">average_precision_score</span><span class="p">,</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;AP&quot;</span></div>
+
+    
+<div class="viewcode-block" id="F1Score">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.F1Score">[docs]</a>
+<span class="k">class</span> <span class="nc">F1Score</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The F1 score metric. Defined for Binary classifiers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f1_score</span><span class="p">,</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;F1Score&quot;</span></div>
+
+
+<div class="viewcode-block" id="QKappa">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.QKappa">[docs]</a>
+<span class="k">class</span> <span class="nc">QKappa</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cohen&#39;s kappa score (quadratic).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">partial</span><span class="p">(</span><span class="n">cohen_kappa_score</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="s2">&quot;quadratic&quot;</span><span class="p">),</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;QKappa&quot;</span></div>
+
+
+<div class="viewcode-block" id="BACC">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.BACC">[docs]</a>
+<span class="k">class</span> <span class="nc">BACC</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The balanced accuracy score.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">balanced_accuracy_score</span><span class="p">,</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;BACC&quot;</span></div>
+
+
+<div class="viewcode-block" id="MCC">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.MCC">[docs]</a>
+<span class="k">class</span> <span class="nc">MCC</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The Matthew&#39;s correlation coefficient</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matthews_corrcoef</span><span class="p">,</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;MCC&quot;</span></div>
+
+
+<span class="c1"># Regression metrics</span>
+
+<div class="viewcode-block" id="MSE">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.MSE">[docs]</a>
+<span class="k">class</span> <span class="nc">MSE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The Mean squared error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean_squared_error</span><span class="p">,</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;MSE&quot;</span></div>
+
+
+<div class="viewcode-block" id="MAE">
+<a class="viewcode-back" href="../../metrics.html#stambo.metrics.MAE">[docs]</a>
+<span class="k">class</span> <span class="nc">MAE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The mean absolute error.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Metric</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mean_absolute_error</span><span class="p">,</span> <span class="n">int_input</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;MAE&quot;</span></div>
+
+
+
+
+
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-now, Aleksei Tiulpin.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+    var versions_json_url = ''
+</script>
+
+<div class="rst-versions" data-toggle="rst-versions" role="note"
+     aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"></span>
+        v0.1.4
+      <span class="fa fa-caret-down"></span>
+    </span>
+
+    <div class="rst-other-versions">
+        <dl id="versionselector">
+            <dt>Other Versions</dt>
+        </dl>
+
+    </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

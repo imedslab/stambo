@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Main functionality &mdash; stambo v0.1.4 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/msmb.css?v=51bd699f" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=0636b7af"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script src="_static/js/versions.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Metrics" href="metrics.html" />
+    <link rel="prev" title="Welcome to stambo’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+          </a>
+              <div class="version">
+                0.1.4
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to stambo’s documentation!</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Documentation:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Main functionality</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#stambo.compare_models"><code class="docutils literal notranslate"><span class="pre">compare_models()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stambo.to_latex"><code class="docutils literal notranslate"><span class="pre">to_latex()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#stambo.two_sample_test"><code class="docutils literal notranslate"><span class="pre">two_sample_test()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.html">Metrics</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Classification.html">Comparing two classification models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classification_non_iid.html">Classification &amp; non-i.i.d. data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regression.html">Comparing two regression models using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="Two_sample_test.html">Comparing two samples using <code class="docutils literal notranslate"><span class="pre">stambo</span></code></a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">stambo</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Main functionality</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/stambo.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="main-functionality">
+<h1>Main functionality<a class="headerlink" href="#main-functionality" title="Link to this heading"></a></h1>
+<p>We perform a two-tailed bootstrap test, comparing two samples using pre-defined statistics.
+The library works so that the user provides a function that computes the statistic of interest,
+and predictions of two models on a test set.</p>
+<dl class="py function" id="module-stambo">
+<dt class="sig sig-object py" id="stambo.compare_models">
+<span class="sig-prename descclassname"><span class="pre">stambo.</span></span><span class="sig-name descname"><span class="pre">compare_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_test</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preds_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="metrics.html#stambo.metrics.Metric" title="stambo.metrics.Metric"><span class="pre">Metric</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bootstrap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stambo/_stambo.html#compare_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stambo.compare_models" title="Link to this definition"></a></dt>
+<dd><p>Compares predictions from two models <span class="math notranslate nohighlight">\(f_1(x)\)</span> and <span class="math notranslate nohighlight">\(f_2(x)\)</span> that yield prediction vectors  <span class="math notranslate nohighlight">\(\hat y_{1}\)</span> and <span class="math notranslate nohighlight">\(\hat y_{2}\)</span>
+with a two-tailed bootstrap hypothesis test.</p>
+<p>I.e., we state the following null and alternative hypotheses:</p>
+<div class="math notranslate nohighlight">
+\[ \begin{align}\begin{aligned}H_0: M(y_{gt}, \hat y_{1}) = M(y_{gt}, \hat y_{2})\\H_1: M(y_{gt}, \hat y_{1}) != M(y_{gt}, \hat y_{2}),\end{aligned}\end{align} \]</div>
+<p>where <span class="math notranslate nohighlight">\(M\)</span> is a metric, <span class="math notranslate nohighlight">\(y_{gt}\)</span> is the vector of ground truth labels,
+and <span class="math notranslate nohighlight">\(\hat y_{i}, i=1,2\)</span> are the vectors of predictions for model 1 and 2, respectively.
+Such kind of testing is performed for every specified metric.</p>
+<p>By default, the function assumes that the metrics are defined as more is better (e.g. accuracy, AUC, and others).
+If you work with metrics that are defined as less is better, just swap the models (preds_1 and preds_2) in the function call.</p>
+<p>While the test does return you the <span class="math notranslate nohighlight">\(p\)</span>-value, one should be careful about its interpretation: the <span class="math notranslate nohighlight">\(p\)</span>-value
+is the probability of observing the test statistic <em>at least as extreme</em> as the one obtained assuming that:math:<cite>H_0</cite> is true (probability of Type II error).
+With large data, even small effects can be statistically significant, so one should consider the effect size.</p>
+<p>We compute a standardized effect size using the estimated bootstrap variance.</p>
+<p>Beyond the hypothesis testing, the function also returns confidence intervals per metric, i.e. <span class="math notranslate nohighlight">\([M(y_{gt}, \hat y)_{(\alpha / 2)}, M(y_{gt}, \hat y)_{(1 - \alpha / 2)}]\)</span>. At this moment,
+the confidence intervals are computed using the simple percentile method. In the future, we will implement the BCa approach, which is more accurate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>y_test</strong> (<em>Union</em><em>[</em><em>npt.NDArray</em><em>[</em><em>np.int64</em><em>]</em><em>, </em><em>npt.NDArray</em><em>[</em><em>np.float64</em><em>]</em><em>]</em>) – Ground truth</p></li>
+<li><p><strong>preds_1</strong> (<em>Union</em><em>[</em><em>npt.NDArray</em><em>[</em><em>np.int64</em><em>]</em><em>, </em><em>npt.NDArray</em><em>[</em><em>np.float64</em><em>]</em><em>]</em>) – Prediction from model 1</p></li>
+<li><p><strong>preds_2</strong> (<em>Union</em><em>[</em><em>npt.NDArray</em><em>[</em><em>np.int64</em><em>]</em><em>, </em><em>npt.NDArray</em><em>[</em><em>np.float64</em><em>]</em><em>]</em>) – Prediction from model 2</p></li>
+<li><p><strong>metrics</strong> (<em>Tuple</em><em>[</em><em>Union</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="metrics.html#stambo.metrics.Metric" title="stambo.metrics.Metric"><em>Metric</em></a><em>]</em><em>]</em>) – A set of metrics to call. Here, the user either specifies the metrics available from the stambo library (<code class="docutils literal notranslate"><span class="pre">stambo.metrics</span></code>), or adds an instance of the custom-defined metrics.</p></li>
+<li><p><strong>groups</strong> (<em>Optional</em><em>[</em><em>npt.NDArray</em><em>[</em><em>np.int64</em><em>]</em><em>]</em>) – Groups indicating the subject for each measurement.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – A significance level for confidence intervals (from 0 to 1).</p></li>
+<li><p><strong>n_bootstrap</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of bootstrap iterations. Defaults to 10000.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed. Defaults to None.</p></li>
+<li><p><strong>silent</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A dictionary containing a tuple with the empirical value of the metric, and the two-tailed p-value.</dt><dd><p>The expected format in the output in every dict entry is:</p>
+<ul class="simple">
+<li><p>Two sided <span class="math notranslate nohighlight">\(p\)</span>-value</p></li>
+<li><p>Observed difference (effect size)</p></li>
+<li><p>Effect size CI low</p></li>
+<li><p>Effect size CI high</p></li>
+<li><p><span class="math notranslate nohighlight">\(M(y_{gt}, \hat y_{1})\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(M(y_{gt}, \hat y_{1})_{(\alpha / 2)}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(M(y_{gt}, \hat y_{1})_{(1 - \alpha / 2)}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(M(y_{gt}, \hat y_{1})\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(M(y_{gt}, \hat y_{2})_{(\alpha / 2)}\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(M(y_{gt}, \hat y_{2})_{(1 - \alpha / 2)}\)</span></p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[Tuple[float]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stambo.to_latex">
+<span class="sig-prename descclassname"><span class="pre">stambo.</span></span><span class="sig-name descname"><span class="pre">to_latex</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m1_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'M1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m2_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'M2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_digits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="_modules/stambo/_utils.html#to_latex"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stambo.to_latex" title="Link to this definition"></a></dt>
+<dd><p>Converts a report returned by StamBO into a LaTeX table for convenient viewing.</p>
+<p>Note: The alternative hypothesis is that the second model is different from the first model.
+The p-value is the two-tailed p-value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>report</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Tuple</em><em>[</em><em>float</em><em>]</em><em>]</em>) – A dictionary with metrics. Use the stambo-generated format.</p></li>
+<li><p><strong>m1</strong> (<em>str</em><em>, </em><em>optional</em>) – Name to assign to the table row. Defaults to M1.</p></li>
+<li><p><strong>m2</strong> (<em>str</em><em>, </em><em>optional</em>) – Name to assign to the table row. Defaults to M2.</p></li>
+<li><p><strong>n_digits</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of digits to round to. Defaults to 2.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A cut-and-paste LaTeX table in tabular environment.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="stambo.two_sample_test">
+<span class="sig-prename descclassname"><span class="pre">stambo.</span></span><span class="sig-name descname"><span class="pre">two_sample_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">PredSampleWrapper</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">PredSampleWrapper</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">statistics</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">int64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bootstrap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_paired</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="_modules/stambo/_stambo.html#two_sample_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#stambo.two_sample_test" title="Link to this definition"></a></dt>
+<dd><p>Compares whether the empirical difference of statistics computed own two samples is statistically significant or not.
+Note that the statistics are computed independently, and should thus be treated independently.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_1</strong> (<em>Union</em><em>[</em><em>npt.NDArray</em><em>[</em><em>np.int64</em><em>]</em><em>, </em><em>npt.NDArray</em><em>[</em><em>np.float64</em><em>]</em>) – Sample 1 to be compared</p></li>
+<li><p><strong>sample_2</strong> (<em>Union</em><em>[</em><em>npt.NDArray</em><em>[</em><em>np.int64</em><em>]</em><em>, </em><em>npt.NDArray</em><em>[</em><em>np.float64</em><em>]</em>) – Sample 2 to be compared</p></li>
+<li><p><strong>groups</strong> (<em>Optional</em><em>[</em><em>npt.NDArray</em><em>[</em><em>np.int64</em><em>]</em><em>]</em>) – Groups indicating the subject for each measurement.</p></li>
+<li><p><strong>statistics</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Callable</em><em>]</em>) – Statistics to compare the samples by.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em><em>, </em><em>optional</em>) – A significance level for confidence intervals (from 0 to 1).</p></li>
+<li><p><strong>n_bootstrap</strong> (<em>int</em><em>, </em><em>optional</em>) – The number of bootstrap iterations. Defaults to 10000.</p></li>
+<li><p><strong>non_paired</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to use a non-paired design. Defaults to False.</p></li>
+<li><p><strong>seed</strong> (<em>int</em><em>, </em><em>optional</em>) – Random seed. Defaults to None.</p></li>
+<li><p><strong>silent</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><dl class="simple">
+<dt>A dictionary containing a tuple with the empirical value of the metric, and the p-value.</dt><dd><p>The expected format in the output in every dict entry is:</p>
+<ul class="simple">
+<li><p>two-sided p-value</p></li>
+<li><p>observed difference (effect size)</p></li>
+<li><p>CI low (effect size)</p></li>
+<li><p>CI high (effect size)</p></li>
+<li><p>empirical value (sample 1),</p></li>
+<li><p>CI low (sample 1)</p></li>
+<li><p>CI high (sample 1)</p></li>
+<li><p>empirical value (sample 2),</p></li>
+<li><p>CI low (sample 2)</p></li>
+<li><p>CI high (sample 2).</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict[Tuple[float]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to stambo’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="metrics.html" class="btn btn-neutral float-right" title="Metrics" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024-now, Aleksei Tiulpin.</p>
+  </div>
+
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+    var versions_json_url = ''
+</script>
+
+<div class="rst-versions" data-toggle="rst-versions" role="note"
+     aria-label="versions">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      <span class="fa fa-book"></span>
+        v0.1.4
+      <span class="fa fa-caret-down"></span>
+    </span>
+
+    <div class="rst-other-versions">
+        <dl id="versionselector">
+            <dt>Other Versions</dt>
+        </dl>
+
+    </div>
+</div><script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
