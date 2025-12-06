@@ -77,7 +77,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
                 ind2 = np.random.choice(len(sample_2), len(sample_2), replace=True)
         else:
             # When we have groups, we need to sample them with replacement
-            groups_ind = np.random.choice(groups_ids, len(sample_1), replace=True)
+            groups_ind = np.random.choice(groups_ids, len(groups_ids), replace=True)
             # Once the groups are sampled, we can concatenate the indices
             ind = np.concatenate([group_data[grp]["indices"] for grp in groups_ind])
             ind1 = ind
