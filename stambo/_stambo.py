@@ -13,7 +13,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
                     statistics: Dict[str, Callable], 
                     groups: Optional[npt.NDArray[np.int64]]=None,
                     alpha: float=0.05, 
-                    n_bootstrap: int=10000, seed: int=None, 
+                    n_bootstrap: int=5000, seed: int=None, 
                     non_paired: bool=False,
                     silent: bool=False) -> Dict[str, Tuple[float]]:
     r"""Compares whether the empirical difference of statistics computed own two samples is statistically significant or not.
@@ -144,7 +144,7 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
     Such kind of testing is performed for every specified metric. 
     
     By default, the function assumes that the metrics are defined as more is better (e.g. accuracy, AUC, and others). 
-    If you work with metrics that are defined as less is better, just swap the models (preds_1 and preds_2) in the function call.
+    If you work with metrics that are defined as less is better, just swap the models (:math:`\hat y_{1}` and :math:`\hat y_{2}`) in the function call.
     
     While the test does return you the :math:`p`-value, one should be careful about its interpretation: the :math:`p`-value 
     is the probability of observing the test statistic *at least as extreme* as the one obtained assuming that :math:`H_0` is true (probability of Type II error).
@@ -155,8 +155,11 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
     Beyond the hypothesis testing, the function also returns confidence intervals per metric, i.e. 
     
     .. math::
-        [M(y_{gt}, \hat y)_{(\\alpha / 2)}, M(y_{gt}, \hat y)_{(1 - \\alpha / 2)}]
-        
+        P\left(M(y_{gt,*}, \hat y_*) \in [L_{CI}(\alpha), H_{CI}(\alpha)]\right) = 1 - \alpha,
+
+    where :math:`L` and :math:`H` are the lower and upper bounds of the confidence interval, respectively, and :math:`\alpha` is the significance level,
+    and :math:`*` indicates that the metric is computed on infinite data.
+
     At this moment, 
     the confidence intervals are computed using the simple percentile method. In the future, we will implement the BCa approach, which is more accurate.
     

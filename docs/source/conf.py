@@ -40,7 +40,7 @@ extensions = [
 ]
 
 # Make Sphinx turn type hints into cross-references
-autodoc_typehints = "both"  # show in signature + show in description
+autodoc_typehints = "description"  # show in signature + show in description
 autodoc_typehints_format = "short"  # use short names (Path not pathlib.Path)
 
 # If you want type hints to be pulled *from docstrings*:
@@ -49,7 +49,20 @@ autodoc_typehints_description_target = "documented"  # or "all"
 # Intersphinx so built-in and external types become links
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
+    "numpy": ("https://numpy.org/doc/stable/", None),
 }
+
+# Teach Napoleon how to resolve the custom type aliases we use in docstrings
+napoleon_type_aliases = {
+    "npt.NDArray": "numpy.typing.NDArray",
+    "np.ndarray": "numpy.ndarray",
+    "np.int64": "numpy.int64",
+    "np.float64": "numpy.float64",
+    "Metric": "stambo.metrics.Metric",
+    "PredSampleWrapper": "stambo._predsamplewrapper.PredSampleWrapper",
+}
+
+napoleon_preprocess_types = True
 
 templates_path = ['_templates']
 exclude_patterns = []
