@@ -10,10 +10,7 @@ PredSampleWrapperType = TypeVar("PredSampleWrapperType", bound="PredSampleWrappe
 
 
 class PredSampleWrapper:
-    def __init__(self: PredSampleWrapperType, predictions: PredGtType, 
-                 gt: PredGtType, multiclass: bool=True, threshold: Optional[float]=0.5,
-                 cached_am: Optional[npt.NDArray[int]]=None):
-        r"""Wraps predictions and targets in one object.
+    r"""Wraps predictions and targets in one object.
 
         Args:
             predictions: Model predictions to wrap.
@@ -21,7 +18,10 @@ class PredSampleWrapper:
             multiclass: Whether the predictions correspond to a multiclass classifier. Defaults to True.
             threshold: Threshold to apply to binary predictions when ``multiclass`` is False. Defaults to 0.5.
             cached_am: Optional cached argmax / thresholded predictions to reuse.
-        """
+    """
+    def __init__(self: PredSampleWrapperType, predictions: PredGtType, 
+                 gt: PredGtType, multiclass: bool=True, threshold: Optional[float]=0.5,
+                 cached_am: Optional[npt.NDArray[int]]=None):
 
         self.multiclass = multiclass
         self.predictions = predictions
