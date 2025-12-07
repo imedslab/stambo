@@ -19,11 +19,14 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
     r"""Compares whether the empirical difference of statistics computed own two samples is statistically significant or not.
 
     The hypotheses we test are:
+
     .. math::
-        H_0: f(x_1) \leq f(x_2)
+
+        H_0: f(x_1) \leq f(x_2) \\
         H_1: f(x_1) > f(x_2),
-    where :math:`f` is a function of interest, and :math:`x_1` and :math:`x_2` are the samples to be compared. 
-    Note that the statistics are computed independently, and should thus be treated independently. 
+
+    where :math:`f` is a function of interest, and :math:`x_1` and :math:`x_2` are the samples to be compared.
+    Note that the statistics are computed independently, and should thus be treated independently.
 
 
     Args:
@@ -38,18 +41,20 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the p-value. The expected format in the output in every dict entry is: 
-                            
-                            * Right-tailed p-value $p(H_0 \mid \texttt{data})$
-                            * observed difference (effect size)
-                            * CI low (effect size)
-                            * CI high (effect size)
-                            * empirical value (sample 1), 
-                            * CI low (sample 1)
-                            * CI high (sample 1)
-                            * empirical value (sample 2), 
-                            * CI low (sample 2)
-                            * CI high (sample 2).
+        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the p-value.
+
+        Each entry contains, in order:
+
+        * Right-tailed p-value :math:`p(H_0 \mid \texttt{data})`
+        * Observed difference (effect size)
+        * CI low (effect size)
+        * CI high (effect size)
+        * Empirical value (sample 1)
+        * CI low (sample 1)
+        * CI high (sample 1)
+        * Empirical value (sample 2)
+        * CI low (sample 2)
+        * CI high (sample 2)
 
     """
     

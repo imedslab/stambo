@@ -31,11 +31,6 @@ To start using the library, one can simply the library on the two data samples t
 
 If you would like to avoid the paired design, you can simply set the `non_paired` argument to `True`.
 
-.. figure:: /_static/example_table.png
-   :alt: example table
-   :align: left
-   :height: 30%
-
 What makes this libarry different, is that we support implementation of bootsyrap across many metrics at the same time and clustered bootstrap. 
 The latter is particularly useful when the data is from the same patient. 
 Here is how we run it for the case when predictions come a dataset with repeated measurements from the same patient:
@@ -45,10 +40,15 @@ Here is how we run it for the case when predictions come a dataset with repeated
    import stambo
    ...
    seed = 42
-   results = stambo.compare_models(y_test, preds_1, preds_2, ("ROCAUC", "AP"), seed=seed, n_bootstrap=1000)
+   results = stambo.compare_models(y_test, preds_1, preds_2, ("ROCAUC", "AP", "QKappa", "BACC", "MCC"), seed=seed, n_bootstrap=1000)
    print(stambo.to_latex(results))
 
-The above will print a LaTeX table, which one can easily copy-paste. 
+The above will print a LaTeX table, which one can easily copy-paste:
+
+.. figure:: /_static/example_table.png
+   :alt: example table
+   :align: left
+   :width: 90%
 
 
 
