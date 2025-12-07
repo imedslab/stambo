@@ -41,21 +41,19 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the p-value.
+        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of
+        the metric, and the p-value. Each entry in the dictionary contains, in order:
 
-        Each entry contains, in order:
-
-        * Right-tailed p-value :math:`p(H_0 \mid \texttt{data})`
-        * Observed difference (effect size)
-        * CI low (effect size)
-        * CI high (effect size)
-        * Empirical value (sample 1)
-        * CI low (sample 1)
-        * CI high (sample 1)
-        * Empirical value (sample 2)
-        * CI low (sample 2)
-        * CI high (sample 2)
-
+            * Right-tailed p-value :math:`p(H_0 \mid \texttt{data})`
+            * Observed difference (effect size)
+            * CI low (effect size)
+            * CI high (effect size)
+            * Empirical value (sample 1)
+            * CI low (sample 1)
+            * CI high (sample 1)
+            * Empirical value (sample 2)
+            * CI low (sample 2)
+            * CI high (sample 2)
     """
     
     if seed is not None:
@@ -149,12 +147,17 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
     If you work with metrics that are defined as less is better, just swap the models (preds_1 and preds_2) in the function call.
     
     While the test does return you the :math:`p`-value, one should be careful about its interpretation: the :math:`p`-value 
-    is the probability of observing the test statistic *at least as extreme* as the one obtained assuming that:math:`H_0` is true (probability of Type II error).
+    is the probability of observing the test statistic *at least as extreme* as the one obtained assuming that :math:`H_0` is true (probability of Type II error).
     With large data, even small effects can be statistically significant, so one should consider the effect size. 
     
     We compute a standardized effect size using the estimated bootstrap variance.
 
-    Beyond the hypothesis testing, the function also returns confidence intervals per metric, i.e. :math:`[M(y_{gt}, \hat y)_{(\\alpha / 2)}, M(y_{gt}, \hat y)_{(1 - \\alpha / 2)}]`. At this moment, 
+    Beyond the hypothesis testing, the function also returns confidence intervals per metric, i.e. 
+    
+    .. math::
+        [M(y_{gt}, \hat y)_{(\\alpha / 2)}, M(y_{gt}, \hat y)_{(1 - \\alpha / 2)}]
+        
+    At this moment, 
     the confidence intervals are computed using the simple percentile method. In the future, we will implement the BCa approach, which is more accurate.
     
     Args:
@@ -169,19 +172,20 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
         silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the one-tailed p-value. 
-                            The expected format in the output in every dict entry is:
+        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of
+        the metric, and the one-tailed p-value. The expected format in the output in
+        every dict entry is:
 
-                            * One-sided :math:`p`-value
-                            * Observed difference (effect size)
-                            * Effect size CI low
-                            * Effect size CI high
-                            * :math:`M(y_{gt}, \hat y_{1})`
-                            * :math:`M(y_{gt}, \hat y_{1})_{(\\alpha / 2)}`
-                            * :math:`M(y_{gt}, \hat y_{1})_{(1 - \\alpha / 2)}`
-                            * :math:`M(y_{gt}, \hat y_{1})`
-                            * :math:`M(y_{gt}, \hat y_{2})_{(\\alpha / 2)}`
-                            * :math:`M(y_{gt}, \hat y_{2})_{(1 - \\alpha / 2)}`
+            * One-sided :math:`p`-value
+            * Observed difference (effect size)
+            * Effect size CI low
+            * Effect size CI high
+            * :math:`M(y_{gt}, \hat y_{1})`
+            * :math:`M(y_{gt}, \hat y_{1})_{(\\alpha / 2)}`
+            * :math:`M(y_{gt}, \hat y_{1})_{(1 - \\alpha / 2)}`
+            * :math:`M(y_{gt}, \hat y_{1})`
+            * :math:`M(y_{gt}, \hat y_{2})_{(\\alpha / 2)}`
+            * :math:`M(y_{gt}, \hat y_{2})_{(1 - \\alpha / 2)}`
     """
 
     # Data samples need to be prepared
