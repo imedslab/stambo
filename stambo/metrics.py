@@ -37,7 +37,10 @@ class Metric:
         if self.int_input: # Handling the case when the metric expects an integer input, i.e. cohen's cappa
             return self.metric(sample.gt, sample.predictions_am)
         return self.metric(sample.gt, sample.predictions)
-    
+
+    def __str__(self) -> str:
+        return "MetricPlaceholderName"
+
 # Classification metrics
 class ROCAUC(Metric):
     r"""The ROC-AUC metric. Defined for Binary classifiers.

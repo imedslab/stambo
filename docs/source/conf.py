@@ -59,7 +59,7 @@ napoleon_type_aliases = {
     "np.int64": "numpy.int64",
     "np.float64": "numpy.float64",
     "Metric": "stambo.metrics.Metric",
-    "PredSampleWrapper": "stambo._predsamplewrapper.PredSampleWrapper",
+    "PredSampleWrapper": "stambo.PredSampleWrapper",
 }
 
 napoleon_preprocess_types = True
