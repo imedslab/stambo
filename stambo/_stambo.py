@@ -30,8 +30,8 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
 
 
     Args:
-        sample_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]): Sample 1 to be compared
-        sample_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]): Sample 2 to be compared
+        sample_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper]): Sample 1 to be compared
+        sample_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper]): Sample 2 to be compared
         groups (Optional[npt.NDArray[np.int64]]): Groups indicating the subject for each measurement.
         statistics (Dict[str, Callable]): Statistics to compare the samples by.
         alpha (float, optional): A significance level for confidence intervals (from 0 to 1).
@@ -44,7 +44,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of
         the metric, and the p-value. Each entry in the dictionary contains, in order:
 
-            * Right-tailed p-value :math:`p(H_0 \mid \texttt{data})`
+            * Right-tailed :math:`p(H_0 \mid \texttt{data})`
             * Observed difference (effect size)
             * CI low (effect size)
             * CI high (effect size)

@@ -62,6 +62,16 @@ napoleon_type_aliases = {
     "PredSampleWrapper": "stambo.PredSampleWrapper",
 }
 
+# Tell autodoc to resolve the same aliases when rendering type hints so links work
+autodoc_type_aliases = {
+    "npt.NDArray": "numpy.typing.NDArray",
+    "np.ndarray": "numpy.ndarray",
+    "np.int64": "numpy.int64",
+    "np.float64": "numpy.float64",
+    "Metric": "stambo.metrics.Metric",
+    "PredSampleWrapper": "stambo.PredSampleWrapper",
+}
+
 napoleon_preprocess_types = True
 
 templates_path = ['_templates']
