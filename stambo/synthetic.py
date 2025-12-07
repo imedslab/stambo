@@ -11,7 +11,7 @@ def generate_non_iid_measurements(n_data: int, n_subjects: int, rho: float,
     mu_cls_1: float=0, mu_cls_2: float=2, 
     unevenness: float=0.3, class_imbalance: float=0.5, overlap: float=0.5, 
     seed: Optional[int]=None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """
+    r"""
     Simulates a dataset where subjects may be missing from one of the classes (dropped clusters).
     
     Args:
@@ -150,62 +150,4 @@ def generate_non_iid_measurements(n_data: int, n_subjects: int, rho: float,
     perm = rng.permutation(len(data))
     
     return data[perm], labels[perm], subject_ids[perm]
-
-
-
-def generate_paired_data(n_subjects: int, n_measurements: int, effect_size: float=0.5, dim: int=1, min_samples: int=2, d_temp=2, mean_range: tuple=None, base_cov: np.ndarray=None, seed: int=None):
-    """
-    Generates paired data for two groups with a block-structured covariance matrix.
-    The function simulates data when a patient was measured before and after a treatment.
-    
-    Args:
-        n_subjects (int): Number of subjects in the study.
-        n_measurements (int): Total number of measurements across all subjects.
-        effect_size (float): Effect size of the treatment.
-        dim (int): Dimensionality of each measurement.
-        min_samples (int): Minimum number of measurements per subject.
-        d_temp (float): Parameter for the Dirichlet distribution.
-        mean_range (tuple): Specifies the low and high range for sampling each subject's mean vector.
-        base_cov (np.ndarray, optional): Base covariance matrix used to define the intra-subject correlations. Defaults to None.
-        seed (int, optional): Seed for the random number generator. Defaults to None.
-    Returns:
-        paired_data (np.ndarray): Array of shape (N, 2, dim) containing all pairs of measurements.
-        s_ids_paired (np.ndarray): Array of shape (N,) containing subject IDs corresponding to each pair of measurements
-    """ 
-    if seed is not None:
-        np.random.seed(seed)
-
-    if mean_range is None:
-        mean_range = np.array((-0.5, 0))
-    if base_cov is None:
-        base_cov = np.ones((dim, dim))  # Example structured covariance
-        
-    assert base_cov.shape == (dim, dim), f"Base covariance matrix must be of shape (dim, dim), but is {base_cov.shape}"
-    
-    n_measurements_per_subj = generate_n_measurements(n_subjects, n_measurements, random=True, d_temp=d_temp, min_samples=min_samples)
-
-    data, subject_ids, _ = generate_non_iid_measurements(n_measurements_per_subj, mean_range, base_cov)
-
-    # Let us now generate paired data. This will mimic the case
-    # when we measure effect of a treatment within the same subject.
-    # In the case of stambo, this mimics the case of model comparison.
-    # That is: we have two models on the SAME data. 
-    # A good example here is the accuracy metric. It nicely decomposes into sample-level accuracy,
-    # where 1 is correct prediction, and 0 is incorrect prediction, and we can consider an 
-    # imporved model as "treatment. 
-
-    paired_data = []
-    s_ids_paired = []
-    for s_id in np.unique(subject_ids):
-        subj_data = data[np.where(subject_ids == s_id)]
-        np.random.shuffle(subj_data)
-        for i in range(0, len(subj_data) - 1, 2):
-            paired_data.append((subj_data[i], subj_data[i+1] + effect_size))
-            s_ids_paired.append(s_id)
-            
-    paired_data = np.array(paired_data)
-    s_ids_paired = np.array(s_ids_paired)
-    
-    return paired_data, s_ids_paired
-
 

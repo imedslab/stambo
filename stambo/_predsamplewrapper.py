@@ -13,7 +13,7 @@ class PredSampleWrapper:
     def __init__(self: PredSampleWrapperType, predictions: PredGtType, 
                  gt: PredGtType, multiclass: bool=True, threshold: Optional[float]=0.5,
                  cached_am: Optional[npt.NDArray[np.int_]]=None):
-        """Wraps predictions and targets in one object.
+        r"""Wraps predictions and targets in one object.
 
         Args:
             predictions (npt.NDArray[Union[np.float64, np.int64]): _description_
@@ -39,7 +39,7 @@ class PredSampleWrapper:
         self.gt = gt
 
     def __getitem__(self: PredSampleWrapperType, idx: IndexType) -> Union[PredTuple, PredSampleWrapperType]:
-        """Give access to the predictions and the ground truth by index or a set of indices.
+        r"""Give access to the predictions and the ground truth by index or a set of indices.
 
         Args:
             idx (Union[int, Iterable[int], npt.NDArray[np.int_]]): Index / indices.

@@ -16,8 +16,15 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
                     n_bootstrap: int=10000, seed: int=None, 
                     non_paired: bool=False,
                     silent: bool=False) -> Dict[str, Tuple[float]]:
-    """Compares whether the empirical difference of statistics computed own two samples is statistically significant or not.
-    Note that the statistics are computed independently, and should thus be treated independently.
+    r"""Compares whether the empirical difference of statistics computed own two samples is statistically significant or not.
+
+    The hypotheses we test are:
+    .. math::
+        H_0: f(x_1) \leq f(x_2)
+        H_1: f(x_1) > f(x_2),
+    where :math:`f` is a function of interest, and :math:`x_1` and :math:`x_2` are the samples to be compared. 
+    Note that the statistics are computed independently, and should thus be treated independently. 
+
 
     Args:
         sample_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]): Sample 1 to be compared
@@ -31,10 +38,9 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the p-value. 
-                            The expected format in the output in every dict entry is: 
+        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the p-value. The expected format in the output in every dict entry is: 
                             
-                            * two-sided p-value
+                            * Right-tailed p-value $p(H_0 \mid \texttt{data})$
                             * observed difference (effect size)
                             * CI low (effect size)
                             * CI high (effect size)
@@ -92,22 +98,22 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
         emp_s1 = statistics[s_tag](sample_1)
         emp_s2 = statistics[s_tag](sample_2) 
 
+        # Observed difference: Delta
         observed = emp_s2 - emp_s1
+        diff_array = result[s_tag][:, 1] - result[s_tag][:, 0]
         # Generaing the null
-        null = result[s_tag][:, 1] - result[s_tag][:, 0] - observed
-        cdf_left = ((null <= -observed).sum() + 1.) / (n_bootstrap + 1)
-        p_val = 2 * min(cdf_left, 1 - cdf_left)
-        # Compute the standardized effect size
-        es_bs = result[s_tag][:, 1] - result[s_tag][:, 0]
+        # Model 2 > Model 1 is the alternative hypothesis in one-tailed test
+        null = diff_array - observed
+        p_val_right = ((null >= observed).sum() + 1.) / (n_bootstrap + 1)
+        # Compute the effect size
         # We also want to compute the confidence intervals
         # In this version of STAMBO, we use the simple percentile method
-        # In the future, we will implement the BCa approach
-        ci_es = (np.percentile(es_bs, alpha / 2.), np.percentile(es_bs, 100 - alpha / 2.))
+        ci_es = (np.percentile(diff_array, alpha / 2.), np.percentile(diff_array, 100 - alpha / 2.))
         ci_s1 = (np.percentile(result[s_tag][:, 0], alpha / 2.), np.percentile(result[s_tag][:, 0], 100 - alpha / 2.))
         ci_s2 = (np.percentile(result[s_tag][:, 1], alpha / 2.), np.percentile(result[s_tag][:, 1], 100 - alpha / 2.))
         # And we report the p-value, empirical values, as well as the confidence intervals. 
         # The the format in the documentation.
-        result_final[s_tag] = [p_val, observed, ci_es[0], ci_es[1], emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
+        result_final[s_tag] = [p_val_right, observed, ci_es[0], ci_es[1], emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
         result_final[s_tag] = np.array(result_final[s_tag])
     return result_final
 
@@ -120,15 +126,15 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
                    alpha: Optional[float]=0.05, 
                    n_bootstrap: int=10000, seed: int=None, 
                    silent: bool=False) -> Dict[str, Tuple[float]]:
-    """Compares predictions from two models :math:`f_1(x)` and :math:`f_2(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}` 
-    with a two-tailed bootstrap hypothesis test.
+    r"""Compares predictions from two models :math:`f_1(x)` and :math:`f_2(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}` 
+    with a one-tailed bootstrap hypothesis test. Note: you must make sure that the metric is defined as more is better (e.g. accuracy, AUC, and others).
     
     I.e., we state the following null and alternative hypotheses:
 
     .. math::
-        H_0: M(y_{gt}, \hat y_{1}) = M(y_{gt}, \hat y_{2})
+        H_0: M(y_{gt}, \hat y_{1}) \leq M(y_{gt}, \hat y_{2})
 
-        H_1: M(y_{gt}, \hat y_{1}) != M(y_{gt}, \hat y_{2}),
+        H_1: M(y_{gt}, \hat y_{2}) > M(y_{gt}, \hat y_{1}),
 
     where :math:`M` is a metric, :math:`y_{gt}` is the vector of ground truth labels, 
     and :math:`\hat y_{i}, i=1,2` are the vectors of predictions for model 1 and 2, respectively. 
@@ -158,10 +164,10 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
         silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the two-tailed p-value. 
+        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of the metric, and the one-tailed p-value. 
                             The expected format in the output in every dict entry is:
 
-                            * Two sided :math:`p`-value
+                            * One-sided :math:`p`-value
                             * Observed difference (effect size)
                             * Effect size CI low
                             * Effect size CI high

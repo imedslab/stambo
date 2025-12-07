@@ -2,7 +2,7 @@ from tqdm import tqdm
 from typing import Iterable, Dict, Tuple, Optional
 
 def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> tqdm:
-    """Progress bar wrapper.
+    r"""Progress bar wrapper.
     
     Args:
         iterable (Iterable): The iterable to wrap.
@@ -17,7 +17,7 @@ def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> tqdm:
     return tqdm(iterable, total=total, desc=desc)
 
 def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_name: Optional[str]="M2", n_digits: int=2) -> str:
-    """Converts a report returned by StamBO into a LaTeX table for convenient viewing.
+    r"""Converts a report returned by StamBO into a LaTeX table for convenient viewing.
     
     Note: The alternative hypothesis is that the second model is different from the first model. 
     The p-value is the two-tailed p-value.
