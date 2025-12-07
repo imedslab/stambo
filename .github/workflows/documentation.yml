@@ -3,7 +3,9 @@ name: documentation
 on:
   push:
     branches:
-      - 'main'
+      - main
+      - dev
+  workflow_dispatch:
 permissions:
   contents: write
 
@@ -14,10 +16,10 @@ jobs:
       max-parallel: 1
     steps:
     - uses: actions/checkout@v4
-    - name: Set up uv with Python 3.9
+    - name: Set up uv with Python 3.12
       uses: astral-sh/setup-uv@v7
       with:
-        python-version: 3.9
+        python-version: 3.12
     - name: Install system dependencies
       run: |
         sudo apt-get update
@@ -31,9 +33,9 @@ jobs:
         cd docs && make html
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
-      if: ${{ github.ref == 'refs/heads/main' }}
+      if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
       with:
-        publish_branch: gh-pages
+        publish_branch: ${{ github.ref == 'refs/heads/dev' && 'gh-pages-dev' || 'gh-pages' }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/build/html
         force_orphan: true
