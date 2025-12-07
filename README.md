@@ -46,13 +46,10 @@ A more detailed and full example of the above is shown here: [`notebooks/Two_sam
 
 ## Contributing
 
-To setup a dev environment, you should use the provided environment file, and compile the documentation locally:
+To setup a dev environment, you should use uv and install the project as follows:
 ```
-conda env create -f env.yaml
-conda activate stambo-dev
-pip install -e .
-cd docs
-make html
+uv venv
+uv pip install -e ".[dev]"
 ```
 
 ## Author
