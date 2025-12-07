@@ -9,7 +9,6 @@
 
 import sys
 import os
-import furo
 from stambo import __version__
 
 sys.path.insert(0, os.path.abspath('../..'))
