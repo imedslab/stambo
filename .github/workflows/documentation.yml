@@ -26,11 +26,10 @@ jobs:
         sudo apt-get install -y libarchive-dev
     - name: Install Python dependencies
       run: |
-        uv pip install --system -e .
-        uv pip install --system 
+        uv pip install -e ".[dev]"
     - name: Build docs
       run: |
-        cd docs && make html
+        cd docs && uv run make html
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
       if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
