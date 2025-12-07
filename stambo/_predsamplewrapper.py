@@ -3,16 +3,16 @@ import numpy as np
 import numpy.typing as npt
 
 
-PredGtType = npt.NDArray[Union[np.float64, np.int_]]
-PredTuple = Tuple[np.float64, np.int_, Union[np.float64, np.int_]]
-IndexType = Union[int, Iterable[int], npt.NDArray[np.int_]]
+PredGtType = npt.NDArray[Union[float, int]]
+PredTuple = Tuple[float, int, Union[float, int]]
+IndexType = Union[int, Iterable[int], npt.NDArray[int]]
 PredSampleWrapperType = TypeVar("PredSampleWrapperType", bound="PredSampleWrapper")
 
 
 class PredSampleWrapper:
     def __init__(self: PredSampleWrapperType, predictions: PredGtType, 
                  gt: PredGtType, multiclass: bool=True, threshold: Optional[float]=0.5,
-                 cached_am: Optional[npt.NDArray[np.int_]]=None):
+                 cached_am: Optional[npt.NDArray[int]]=None):
         r"""Wraps predictions and targets in one object.
 
         Args:

@@ -19,8 +19,8 @@ the one-tailed bootstrap hypothesis tests:
    :class: banner
    :width: 70%
 
-We have abstracted the bootstrap loop into a single function: :func:`stambo._stambo.two_sample_test`.
-To start using the library, one can simply the library on the two data samples to compare just two means (the default assumpes paired design).
+We have abstracted the bootstrap two-sample test into a single function: :func:`stambo.two_sample_test`.
+To start using the library, one can simply compare just two means (the default assumpes paired design).
 
 .. code-block:: python
 
