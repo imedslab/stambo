@@ -32,7 +32,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
     Args:
         sample_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper]): Sample 1 to be compared
         sample_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper]): Sample 2 to be compared
-        groups (Optional[npt.NDArray[np.int64]]): Groups indicating the subject for each measurement.
+        groups (npt.NDArray[np.int64], optional): Groups indicating the subject for each measurement. Defaults to None.
         statistics (Dict[str, Callable]): Statistics to compare the samples by.
         alpha (float, optional): A significance level for confidence intervals (from 0 to 1).
         n_bootstrap (int, optional): The number of bootstrap iterations. Defaults to 10000.
@@ -168,7 +168,7 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
         preds_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Prediction from model 1
         preds_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Prediction from model 2
         metrics (Tuple[Union[str, Metric]]): A set of metrics to call. Here, the user either specifies the metrics available from the stambo library (``stambo.metrics``), or adds an instance of the custom-defined metrics.
-        groups (Optional[npt.NDArray[np.int64]]): Groups indicating the subject for each measurement.
+        groups (npt.NDArray[np.int64], optional): Groups indicating the subject for each measurement. Defaults to None.
         alpha (float, optional): A significance level for confidence intervals (from 0 to 1).
         n_bootstrap (int, optional): The number of bootstrap iterations. Defaults to 10000.
         seed (int, optional): Random seed. Defaults to None.
