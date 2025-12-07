@@ -9,7 +9,7 @@
 
 import sys
 import os
-import msmb_theme
+import furo
 from stambo import __version__
 
 sys.path.insert(0, os.path.abspath('../..'))
@@ -34,10 +34,22 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx.ext.githubpages",
     "sphinx.ext.napoleon",
+    "sphinx.ext.autodoc.typehints",  # <— Ensures type hint formatting
     "nbsphinx",
     "nbsphinx_link",
 ]
 
+# Make Sphinx turn type hints into cross-references
+autodoc_typehints = "both"  # show in signature + show in description
+autodoc_typehints_format = "short"  # use short names (Path not pathlib.Path)
+
+# If you want type hints to be pulled *from docstrings*:
+autodoc_typehints_description_target = "documented"  # or "all"
+
+# Intersphinx so built-in and external types become links
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+}
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -45,6 +57,5 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "msmb_theme"
-html_theme_path = [msmb_theme.get_html_theme_path()]
+html_theme = "furo"
 

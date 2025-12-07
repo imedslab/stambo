@@ -13,24 +13,19 @@ jobs:
     strategy:
       max-parallel: 1
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up uv with Python 3.9
+      uses: astral-sh/setup-uv@v7
       with:
-        python-version: '3.9'
-    - name: Add conda to system path
+        python-version: 3.9
+    - name: Install system dependencies
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install dependencies
-      run: |
+        sudo apt-get update
         sudo apt-get install -y libarchive-dev
-        conda update --all
-        conda env update --file env.yml --name base
-        pip install -e .
-    - name: Upgrade typing_extensions
+    - name: Install Python dependencies
       run: |
-        pip install --upgrade typing_extensions
+        uv pip install --system -e .
+        uv pip install --system 
     - name: Build docs
       run: |
         cd docs && make html
