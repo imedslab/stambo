@@ -8,10 +8,10 @@ from .metrics import Metric
 
 from . import metrics as metricslib
 
-def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper], 
-                    sample_2: Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper], 
+def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
+                    sample_2: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
                     statistics: Dict[str, Callable], 
-                    groups: Optional[npt.NDArray[np.int64]]=None,
+                    groups: Optional[npt.NDArray[int]]=None,
                     alpha: float=0.05, 
                     n_bootstrap: int=5000, seed: int=None, 
                     non_paired: bool=False,
@@ -121,13 +121,14 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
     return result_final
 
 
-def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]], 
-                   preds_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]], 
-                   preds_2: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]], 
+def compare_models(y_test: Union[npt.NDArray[int], npt.NDArray[float]], 
+                   preds_1: Union[npt.NDArray[int], npt.NDArray[float]], 
+                   preds_2: Union[npt.NDArray[int], npt.NDArray[float]], 
                    metrics: Tuple[Union[str, Metric]],
-                   groups: Optional[npt.NDArray[np.int64]]=None,
-                   alpha: Optional[float]=0.05, 
-                   n_bootstrap: int=10000, seed: int=None, 
+                   groups: Optional[npt.NDArray[int]]=None,
+                   alpha: float=0.05, 
+                   n_bootstrap: int=5000, 
+                   seed: Optional[int]=None, 
                    silent: bool=False) -> Dict[str, Tuple[float]]:
     r"""Compares predictions from two models :math:`f_1(x)` and :math:`f_2(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}` 
     with a one-tailed bootstrap hypothesis test. Note: you must make sure that the metric is defined as more is better (e.g. accuracy, AUC, and others).
@@ -169,8 +170,8 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
         preds_2: Prediction from model 2.
         metrics: A set of metrics to call. Here, the user either specifies the metrics available from the stambo library (``stambo.metrics``), or adds an instance of the custom-defined metrics.
         groups: Groups indicating the subject for each measurement. Defaults to None.
-        alpha: A significance level for confidence intervals (from 0 to 1).
-        n_bootstrap: The number of bootstrap iterations. Defaults to 10000.
+        alpha: A significance level for confidence intervals (from 0 to 1). Defaults to 0.05.
+        n_bootstrap: The number of bootstrap iterations. Defaults to 5000.
         seed: Random seed. Defaults to None.
         silent: Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
