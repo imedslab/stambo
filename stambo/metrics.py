@@ -17,9 +17,8 @@ class Metric:
         r"""Constructor of the metric wrapper class
 
         Args:
-            metric (Callable): The metric of choice. The typical ones are ROC-AUC, Average precision etc. 
-            See more in the https://scikit-learn.org/stable/modules/model_evaluation.html#classification-metrics.
-            int_input (bool, optional): Defines whether the metric takes predictions as integers. Defaults to False.
+            metric: Callable metric to wrap (e.g., ROC-AUC, Average Precision).
+            int_input: Whether the metric expects integer predictions. Defaults to False.
         """
         self.metric = metric
         self.int_input = int_input
@@ -29,10 +28,10 @@ class Metric:
         it wil use the argmaxed predictions that are stored by the `PredSampleWrapper` object.
 
         Args:
-            sample (PredSampleWrapper): Data on which the metric is computed. 
+            sample: Data on which the metric is computed. 
 
         Returns:
-            float: Metric value. 
+            Metric value for the provided sample. 
         """
         if self.int_input: # Handling the case when the metric expects an integer input, i.e. cohen's cappa
             return self.metric(sample.gt, sample.predictions_am)

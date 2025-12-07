@@ -30,18 +30,18 @@ def two_sample_test(sample_1: Union[npt.NDArray[np.int64], npt.NDArray[np.float6
 
 
     Args:
-        sample_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper]): Sample 1 to be compared
-        sample_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64], PredSampleWrapper]): Sample 2 to be compared
-        groups (npt.NDArray[np.int64], optional): Groups indicating the subject for each measurement. Defaults to None.
-        statistics (Dict[str, Callable]): Statistics to compare the samples by.
-        alpha (float, optional): A significance level for confidence intervals (from 0 to 1).
-        n_bootstrap (int, optional): The number of bootstrap iterations. Defaults to 10000.
-        non_paired (bool, optional): Whether to use a non-paired design. Defaults to False.
-        seed (int, optional): Random seed. Defaults to None.
-        silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
+        sample_1: Sample 1 to be compared.
+        sample_2: Sample 2 to be compared.
+        groups: Groups indicating the subject for each measurement. Defaults to None.
+        statistics: Statistics to compare the samples by.
+        alpha: A significance level for confidence intervals (from 0 to 1).
+        n_bootstrap: The number of bootstrap iterations. Defaults to 10000.
+        non_paired: Whether to use a non-paired design. Defaults to False.
+        seed: Random seed. Defaults to None.
+        silent: Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of
+        A dictionary containing a tuple with the empirical value of
         the metric, and the p-value. Each entry in the dictionary contains, in order:
 
             * Right-tailed :math:`p(H_0 \mid \texttt{data})`
@@ -164,18 +164,18 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
     the confidence intervals are computed using the simple percentile method. In the future, we will implement the BCa approach, which is more accurate.
     
     Args:
-        y_test (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Ground truth
-        preds_1 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Prediction from model 1
-        preds_2 (Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]): Prediction from model 2
-        metrics (Tuple[Union[str, Metric]]): A set of metrics to call. Here, the user either specifies the metrics available from the stambo library (``stambo.metrics``), or adds an instance of the custom-defined metrics.
-        groups (npt.NDArray[np.int64], optional): Groups indicating the subject for each measurement. Defaults to None.
-        alpha (float, optional): A significance level for confidence intervals (from 0 to 1).
-        n_bootstrap (int, optional): The number of bootstrap iterations. Defaults to 10000.
-        seed (int, optional): Random seed. Defaults to None.
-        silent (bool, optional): Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
+        y_test: Ground truth.
+        preds_1: Prediction from model 1.
+        preds_2: Prediction from model 2.
+        metrics: A set of metrics to call. Here, the user either specifies the metrics available from the stambo library (``stambo.metrics``), or adds an instance of the custom-defined metrics.
+        groups: Groups indicating the subject for each measurement. Defaults to None.
+        alpha: A significance level for confidence intervals (from 0 to 1).
+        n_bootstrap: The number of bootstrap iterations. Defaults to 10000.
+        seed: Random seed. Defaults to None.
+        silent: Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        Dict[Tuple[float]]: A dictionary containing a tuple with the empirical value of
+        A dictionary containing a tuple with the empirical value of
         the metric, and the one-tailed p-value. The expected format in the output in
         every dict entry is:
 
@@ -184,11 +184,11 @@ def compare_models(y_test: Union[npt.NDArray[np.int64], npt.NDArray[np.float64]]
             * Effect size CI low
             * Effect size CI high
             * :math:`M(y_{gt}, \hat y_{1})`
-            * :math:`M(y_{gt}, \hat y_{1})_{(\\alpha / 2)}`
-            * :math:`M(y_{gt}, \hat y_{1})_{(1 - \\alpha / 2)}`
+            * :math:`M(y_{gt}, \hat y_{1})_{(\alpha / 2)}`
+            * :math:`M(y_{gt}, \hat y_{1})_{(1 - \alpha / 2)}`
             * :math:`M(y_{gt}, \hat y_{1})`
-            * :math:`M(y_{gt}, \hat y_{2})_{(\\alpha / 2)}`
-            * :math:`M(y_{gt}, \hat y_{2})_{(1 - \\alpha / 2)}`
+            * :math:`M(y_{gt}, \hat y_{2})_{(\alpha / 2)}`
+            * :math:`M(y_{gt}, \hat y_{2})_{(1 - \alpha / 2)}`
     """
 
     # Data samples need to be prepared

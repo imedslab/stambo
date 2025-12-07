@@ -5,12 +5,13 @@ def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> tqdm:
     r"""Progress bar wrapper.
     
     Args:
-        iterable (Iterable): The iterable to wrap.
-        total (int): The total number of iterations.
-        desc (str): The description of the progress bar.
-        silent (bool, optional): Whether to suppress the progress bar. Defaults to False.
+        iterable: The iterable to wrap.
+        total: The total number of iterations.
+        desc: The description of the progress bar.
+        silent: Whether to suppress the progress bar. Defaults to False.
+
     Returns:
-        [tqdm, Iterable]: The progress bar if silent is False, otherwise the iterable.
+        The progress bar if ``silent`` is False, otherwise the iterable.
     """
     if silent:
         return iterable
@@ -23,12 +24,13 @@ def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_na
     The p-value is the two-tailed p-value.
         
     Args:
-        report (Dict[str, Tuple[float]]): A dictionary with metrics. Use the stambo-generated format.
-        m1 (str, optional): Name to assign to the table row. Defaults to M1.
-        m2 (str, optional): Name to assign to the table row. Defaults to M2.
-        n_digits (int, optional): Number of digits to round to. Defaults to 2.
+        report: Dictionary with metrics in the StamBO-generated format.
+        m1_name: Name to assign to the first model row. Defaults to M1.
+        m2_name: Name to assign to the second model row. Defaults to M2.
+        n_digits: Number of digits to round to. Defaults to 2.
+
     Returns:
-        str: A cut-and-paste LaTeX table in tabular environment.
+        A cut-and-paste LaTeX table in the tabular environment.
     """
     # Format: three rows: one per metric, another per model
     tbl = "% \\usepackage{booktabs} <-- do not forget to have this imported. \n"

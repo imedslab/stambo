@@ -16,10 +16,11 @@ class PredSampleWrapper:
         r"""Wraps predictions and targets in one object.
 
         Args:
-            predictions (npt.NDArray[Union[np.float64, np.int64]): _description_
-            gt (npt.NDArray[Union[np.float64 np.int64]]): _description_
-            multiclass (bool, optional): Whether it is a multiclass classifier's sample. Defaults to True.
-            threshold (Optional[float]): Whether to apply the threshold to predictions in the case when we deal with the binary classification. Defaults to 0.5.
+            predictions: Model predictions to wrap.
+            gt: Ground-truth labels.
+            multiclass: Whether the predictions correspond to a multiclass classifier. Defaults to True.
+            threshold: Threshold to apply to binary predictions when ``multiclass`` is False. Defaults to 0.5.
+            cached_am: Optional cached argmax / thresholded predictions to reuse.
         """
 
         self.multiclass = multiclass
@@ -42,10 +43,11 @@ class PredSampleWrapper:
         r"""Give access to the predictions and the ground truth by index or a set of indices.
 
         Args:
-            idx (Union[int, Iterable[int], npt.NDArray[np.int_]]): Index / indices.
+            idx: Single index or collection of indices.
 
         Returns:
-            Tuple[Union[npt.NDArray[np.int_], npt.NDArray[np.float64]], Union[npt.NDArray[np.int_], npt.NDArray[np.float64]]]: A pair of predictions
+            Either a tuple containing the predictions, argmaxed predictions, and ground truth
+            for a single index, or a new ``PredSampleWrapper`` restricted to the provided indices.
         """
 
         if isinstance(idx, int):

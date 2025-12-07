@@ -15,19 +15,19 @@ def generate_non_iid_measurements(n_data: int, n_subjects: int, rho: float,
     Simulates a dataset where subjects may be missing from one of the classes (dropped clusters).
     
     Args:
-        n_data (int): Total number of measurements (sum of both classes).
-        n_subjects (int): Total number of unique subjects.
-        rho (float): Correlation between subject effects in the two classes.
-        feat_corr (float): Correlation between features.
-        subj_sigma (float): Subject-level variance.
-        noise_sigma (float): Noise variance.
-        gamma (float): Bias parameter.
-        mu_cls_1, mu_cls_2 (float/array): Class means.
-        unevenness (float): Dirichlet alpha. Lower = more uneven sample counts per subject.
-        class_imbalance (float): Fraction of total data belonging to Class 1 (0.0 to 1.0).
-        overlap (float): Probability that a subject appears in BOTH classes. 
-                         (1-overlap) is split between being unique to C1 or unique to C2.
-        seed (int): Random seed.
+        n_data: Total number of measurements (sum of both classes).
+        n_subjects: Total number of unique subjects.
+        rho: Correlation between subject effects in the two classes.
+        feat_corr: Correlation between features.
+        subj_sigma: Subject-level variance.
+        noise_sigma: Noise variance.
+        gamma: Bias parameter.
+        mu_cls_1: Class 1 means (scalar or array).
+        mu_cls_2: Class 2 means (scalar or array).
+        unevenness: Dirichlet alpha. Lower values yield more uneven sample counts per subject.
+        class_imbalance: Fraction of total data belonging to Class 1 (0.0 to 1.0).
+        overlap: Probability that a subject appears in both classes. The remainder is split between being unique to C1 or C2.
+        seed: Random seed.
     """
 
     rng = np.random.default_rng(seed)
