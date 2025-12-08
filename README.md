@@ -1,5 +1,6 @@
 # StaMBO: Statistical model comparison with bootstrap 
 [![DOI](https://zenodo.org/badge/747404839.svg)](https://zenodo.org/doi/10.5281/zenodo.10669416)
+[![Tests](https://github.com/imedslab/stambo/actions/workflows/tests.yml/badge.svg?branch=dev)](https://github.com/imedslab/stambo/actions/workflows/tests.yml)
 [![PyPI version](https://badge.fury.io/py/stambo.svg?branch=master)](https://badge.fury.io/py/stambo)
 [![docs](https://github.com/imedslab/stambo/workflows/documentation/badge.svg)](https://imedslab.github.io/stambo/)
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
@@ -27,7 +28,7 @@ print(stambo.to_latex(testing_result))
 The above will print a LaTeX table, which one can easily copy-paste. As an example, below is the rendered table, which was returned in [`notebooks/Classification.ipynb`](https://github.com/Oulu-IMEDS/stambo/blob/main/notebooks/Classification.ipynb) ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Oulu-IMEDS/stambo/main?labpath=notebooks%2FClassification.ipynb)):
 ![Table](docs/source/_static/example_table.png)
 
-**Note:** From version `0.1.4` we support block-diagonal structure of the data. That is, if you have data from the same patient in the test set, it can easily be adjusted for by specifying the `groups` argument. 
+**Note:** From version `0.1.5` we support block-diagonal structure of the data. That is, if you have data from the same patient in the test set, it can easily be adjusted for by specifying the `groups` argument. 
 
 The regression example can be found at [`notebooks/Regression.ipynb`](https://github.com/Oulu-IMEDS/stambo/blob/main/notebooks/Regression.ipynb) ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Oulu-IMEDS/stambo/main?labpath=notebooks%2FRegression.ipynb)
 )
@@ -46,13 +47,10 @@ A more detailed and full example of the above is shown here: [`notebooks/Two_sam
 
 ## Contributing
 
-To setup a dev environment, you should use the provided environment file, and compile the documentation locally:
+To setup a dev environment, you should use uv and install the project as follows:
 ```
-conda env create -f env.yaml
-conda activate stambo-dev
-pip install -e .
-cd docs
-make html
+uv venv
+uv pip install -e ".[dev]"
 ```
 
 ## Author

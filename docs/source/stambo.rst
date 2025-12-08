@@ -7,5 +7,7 @@ and predictions of two models on a test set.
 
 .. automodule:: stambo
     :members:
+    :member-order: bysource
+    :special-members: __call__, __getitem__
     :show-inheritance:
    

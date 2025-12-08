@@ -11,36 +11,38 @@ __all__ = ["Metric", "ROCAUC", "AP", "F1Score", "QKappa", "BACC", "MCC", "MSE", 
 
 # Base metric class
 class Metric:
-    """A wrapper for metrics that take predictions and ground truth labels as two arguments.
+    r"""A wrapper for metrics that take predictions and ground truth labels as two arguments.
     """
     def __init__(self, metric: Callable, int_input: bool=False) -> None:
-        """Constructor of the metric wrapper class
+        r"""Constructor of the metric wrapper class
 
         Args:
-            metric (Callable): The metric of choice. The typical ones are ROC-AUC, Average precision etc. 
-            See more in the https://scikit-learn.org/stable/modules/model_evaluation.html#classification-metrics.
-            int_input (bool, optional): Defines whether the metric takes predictions as integers. Defaults to False.
+            metric: Callable metric to wrap (e.g., ROC-AUC, Average Precision).
+            int_input: Whether the metric expects integer predictions. Defaults to False.
         """
         self.metric = metric
         self.int_input = int_input
 
     def __call__(self, sample: PredSampleWrapper) -> float:
-        """The call method. This runs the metric on the supplied data. If the metric is meanto to be run on integer input.
+        r"""The call method. This runs the metric on the supplied data. If the metric is meanto to be run on integer input.
         it wil use the argmaxed predictions that are stored by the `PredSampleWrapper` object.
 
         Args:
-            sample (PredSampleWrapper): Data on which the metric is computed. 
+            sample: Data on which the metric is computed. 
 
         Returns:
-            float: Metric value. 
+            Metric value for the provided sample. 
         """
         if self.int_input: # Handling the case when the metric expects an integer input, i.e. cohen's cappa
             return self.metric(sample.gt, sample.predictions_am)
         return self.metric(sample.gt, sample.predictions)
-    
+
+    def __str__(self) -> str:
+        return "MetricPlaceholderName"
+
 # Classification metrics
 class ROCAUC(Metric):
-    """The ROC-AUC metric. Defined for Binary classifiers.
+    r"""The ROC-AUC metric. Defined for Binary classifiers.
     """
     def __init__(self) -> None:
         Metric.__init__(self, roc_auc_score, int_input=False)
@@ -49,7 +51,7 @@ class ROCAUC(Metric):
         return "ROCAUC"
 
 class AP(Metric):
-    """The Average Precision metric. Defined for Binary classifiers.
+    r"""The Average Precision metric. Defined for Binary classifiers.
     """
     def __init__(self) -> None:
         Metric.__init__(self, average_precision_score, int_input=False)
@@ -58,7 +60,7 @@ class AP(Metric):
         return "AP"
     
 class F1Score(Metric):
-    """The F1 score metric. Defined for Binary classifiers.
+    r"""The F1 score metric. Defined for Binary classifiers.
     """
     def __init__(self) -> None:
         Metric.__init__(self, f1_score, int_input=False)
@@ -67,7 +69,7 @@ class F1Score(Metric):
         return "F1Score"
 
 class QKappa(Metric):
-    """Cohen's kappa score (quadratic).
+    r"""Cohen's kappa score (quadratic).
     """
     def __init__(self) -> None:
         Metric.__init__(self, partial(cohen_kappa_score, weights="quadratic"), int_input=True)
@@ -76,7 +78,7 @@ class QKappa(Metric):
         return "QKappa"
 
 class BACC(Metric):
-    """The balanced accuracy score.
+    r"""The balanced accuracy score.
     """
     def __init__(self) -> None:
         Metric.__init__(self, balanced_accuracy_score, int_input=True)
@@ -85,7 +87,7 @@ class BACC(Metric):
         return "BACC"
 
 class MCC(Metric):
-    """The Matthew's correlation coefficient
+    r"""The Matthew's correlation coefficient
     """
     def __init__(self) -> None:
         Metric.__init__(self, matthews_corrcoef, int_input=True)
@@ -96,7 +98,7 @@ class MCC(Metric):
 # Regression metrics
 
 class MSE(Metric):
-    """The Mean squared error
+    r"""The Mean squared error
     """
     def __init__(self) -> None:
         Metric.__init__(self, mean_squared_error, int_input=False)
@@ -105,7 +107,7 @@ class MSE(Metric):
         return "MSE"
 
 class MAE(Metric):
-    """The mean absolute error.
+    r"""The mean absolute error.
     """
     def __init__(self) -> None:
         Metric.__init__(self, mean_absolute_error, int_input=False)

@@ -1,128 +1,153 @@
 import numpy as np
 import numpy.typing as npt
+from typing import Optional, Tuple
 
-def generate_n_measurements(n_groups: int, n_measurements: int, random: bool=True, d_temp: float=3, min_samples: int=1, seed: int=None) -> npt.NDArray[np.int64]:
-    """Generates the random number of measurements per group.
+
+import numpy as np
+
+def generate_non_iid_measurements(n_data: int, n_subjects: int, rho: float, 
+    feat_corr: float=0.3,
+    subj_sigma: float=0.1, noise_sigma: float=1, gamma: float=0, 
+    mu_cls_1: float=0, mu_cls_2: float=2, 
+    unevenness: float=0.3, class_imbalance: float=0.5, overlap: float=0.5, 
+    seed: Optional[int]=None) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    r"""
+    Simulates a dataset where subjects may be missing from one of the classes (dropped clusters).
     
     Args:
-        n_groups (int): Total number of groups / subjects.
-        n_measurements (int): Total number of measurements.
-        random (bool, optional): Whether to generate random number of measurements per group. Defaults to True.
-        d_temp (float, optional): Parameter for the Dirichlet distribution. Defaults to 3.
-        min_samples (int, optional): Minimum number of measurements per group. Defaults to 1.
-        seed (int, optional): Seed for the random number generator. Defaults to None.
-    Returns:
-        np.ndarray: An array of shape (M,) containing the number of measurements generated per group.
+        n_data: Total number of measurements (sum of both classes).
+        n_subjects: Total number of unique subjects.
+        rho: Correlation between subject effects in the two classes.
+        feat_corr: Correlation between features.
+        subj_sigma: Subject-level variance.
+        noise_sigma: Noise variance.
+        gamma: Bias parameter.
+        mu_cls_1: Class 1 means (scalar or array).
+        mu_cls_2: Class 2 means (scalar or array).
+        unevenness: Dirichlet alpha. Lower values yield more uneven sample counts per subject.
+        class_imbalance: Fraction of total data belonging to Class 1 (0.0 to 1.0).
+        overlap: Probability that a subject appears in both classes. The remainder is split between being unique to C1 or C2.
+        seed: Random seed.
     """
-    if seed is not None:
-        np.random.seed(seed)
 
-    # Ensure that group / subject gets at least one measurement
-    subject_measurements = np.ones(n_groups, dtype=int) * min_samples  # Start with min_samples measurements per group
-    remaining_measurements = n_measurements - n_groups * min_samples  # Distribute the remaining measurements
-    if random:
-        probs = np.random.dirichlet([d_temp] * n_groups)
+    rng = np.random.default_rng(seed)
+    
+    mu_c1 = np.array(mu_cls_1)
+    mu_c2 = np.array(mu_cls_2)
+    n_dim = mu_c1.shape[0]
+
+    if mu_c1.shape != mu_c2.shape:
+        raise ValueError("Means must have same shape")
+
+    # --- Step 0: Precompute Feature Correlation Transform ---
+    # Construct the correlation matrix for features (R_feat)
+    # For 2D: [[1, r], [r, 1]]
+    if n_dim > 1:
+        # Create a matrix with 1s on diagonal and feat_corr elsewhere
+        R_feat = np.full((n_dim, n_dim), feat_corr)
+        np.fill_diagonal(R_feat, 1.0)
+        
+        # Compute Cholesky decomposition L such that L @ L.T = R_feat
+        # We use this to transform independent normal variables into correlated ones
+        try:
+            L_feat = np.linalg.cholesky(R_feat)
+        except np.linalg.LinAlgError:
+            raise ValueError("feat_corr resulted in a non-positive-definite matrix. Try lowering the correlation.")
     else:
-        probs = np.ones(n_groups) / n_groups
-    subject_measurements += np.random.multinomial(remaining_measurements, probs)
-    
-    return subject_measurements
+        L_feat = np.eye(1)
 
-def generate_non_iid_measurements(measurements_per_group: npt.NDArray[np.int64], mean_range: tuple, base_cov: npt.NDArray[np.float64], seed: int=None):
-    """
-    Simulates a dataset from `measurements_per_group` subjects with a total of `n_measurements` measurements.
-    The dataset follows a multivariate Gaussian distribution with a block-structured covariance matrix,
-    ensuring intra-subject correlation but no inter-subject correlation. Each subject has a unique mean.
-    
-    Args:
-        measurements_per_group (np.ndarray): Array of shape (M,) containing the number of measurements per subject.
-        mean_range (tuple): Range (low, high) from which each subject's mean vector is sampled.
-        base_cov (np.ndarray): Base covariance matrix defining intra-subject correlations.
-        seed (int, optional): Seed for the random number generator. Defaults to None.
-    Returns:
-        np.ndarray: An array of shape (N, dim) containing all measurements.
-        np.ndarray: An array of shape (N,) containing subject IDs corresponding to each measurement.
-        np.ndarray: An array of shape (M, dim) containing the mean vector for each subject.
-    """
-    if seed is not None:
-        np.random.seed(seed)
+    # --- Step 1: Sample Sizes & Subject States ---
+    n_c1 = int(n_data * class_imbalance)
+    n_c2 = n_data - n_c1
 
-    dim = base_cov.shape[0]  # Dimensionality of the measurements
+    # Subject states: 0=Shared, 1=Exc C1, 2=Exc C2
+    probs = [overlap, (1-overlap)/2, (1-overlap)/2]
+    subj_states = rng.choice([0, 1, 2], size=n_subjects, p=probs)
     
-    data = []
-    group_ids = []
-    group_means = [np.random.uniform(mean_range[0], mean_range[1], size=dim) for _ in range(measurements_per_group.shape[0])]  # Unique mean per subject
-    
-    for subject_id, num_measurements in enumerate(measurements_per_group):
-        # If only one subject, use a diagonal covariance matrix
-        if measurements_per_group.shape[0] == 1:
-            subject_cov = np.diag(np.diag(base_cov))  # Enforce diagonal covariance
+    active_c1 = np.where((subj_states == 0) | (subj_states == 1))[0]
+    active_c2 = np.where((subj_states == 0) | (subj_states == 2))[0]
+
+    # Safety fallbacks
+    if len(active_c1) == 0: active_c1 = np.array([0])
+    if len(active_c2) == 0: active_c2 = np.array([0])
+
+    # --- Step 2: Distribute Counts ---
+    def get_counts(n_samples, active_indices):
+        n_active = len(active_indices)
+        if n_samples < n_active:
+             counts = np.zeros(n_active, dtype=int)
+             chosen = rng.choice(n_active, n_samples, replace=False)
+             counts[chosen] = 1
+             return counts
+        
+        base = np.ones(n_active, dtype=int)
+        remaining = n_samples - n_active
+        if remaining > 0:
+            probs = rng.dirichlet(np.ones(n_active) * unevenness)
+            extra = rng.multinomial(remaining, probs)
+            counts = base + extra
         else:
-            subject_cov = base_cov
-        subject_data = np.random.multivariate_normal(group_means[subject_id], subject_cov, size=num_measurements)
-        
-        data.append(subject_data)
-        group_ids.extend([subject_id] * num_measurements)
+            counts = base
+        return counts
+
+    counts_c1 = get_counts(n_c1, active_c1)
+    counts_c2 = get_counts(n_c2, active_c2)
     
-    data = np.vstack(data)
-    group_ids = np.array(group_ids)
+    valid_c1 = counts_c1 > 0
+    valid_c2 = counts_c2 > 0
+
+    ids_expanded_c1 = np.repeat(active_c1[valid_c1], counts_c1[valid_c1])
+    ids_expanded_c2 = np.repeat(active_c2[valid_c2], counts_c2[valid_c2])
+
+    # --- Step 3: Generate Correlated Subject Effects ---
+    # 1. Generate effects with Class-to-Class correlation (rho), but independent features.
+    #    Covariance for classes: [[1, rho], [rho, 1]]
+    cov_class = np.array([[1, rho], [rho, 1]])
     
-    return data, group_ids, group_means
-
-
-def generate_paired_data(n_subjects: int, n_measurements: int, effect_size: float=0.5, dim: int=1, min_samples: int=2, d_temp=2, mean_range: tuple=None, base_cov: np.ndarray=None, seed: int=None):
-    """
-    Generates paired data for two groups with a block-structured covariance matrix.
-    The function simulates data when a patient was measured before and after a treatment.
+    # Shape: (n_subjects, 2, n_dim)
+    # We generate standard normals first, with class correlation
+    b_s_white = np.zeros((n_subjects, 2, n_dim))
+    for d in range(n_dim):
+        b_s_white[:, :, d] = rng.multivariate_normal([0, 0], cov_class, size=n_subjects)
     
-    Args:
-        n_subjects (int): Number of subjects in the study.
-        n_measurements (int): Total number of measurements across all subjects.
-        effect_size (float): Effect size of the treatment.
-        dim (int): Dimensionality of each measurement.
-        min_samples (int): Minimum number of measurements per subject.
-        d_temp (float): Parameter for the Dirichlet distribution.
-        mean_range (tuple): Specifies the low and high range for sampling each subject's mean vector.
-        base_cov (np.ndarray, optional): Base covariance matrix used to define the intra-subject correlations. Defaults to None.
-        seed (int, optional): Seed for the random number generator. Defaults to None.
-    Returns:
-        paired_data (np.ndarray): Array of shape (N, 2, dim) containing all pairs of measurements.
-        s_ids_paired (np.ndarray): Array of shape (N,) containing subject IDs corresponding to each pair of measurements
-    """ 
-    if seed is not None:
-        np.random.seed(seed)
+    # 2. Apply Feature-to-Feature correlation.
+    #    We multiply the last dimension (features) by L_feat.T
+    #    b_s_white is (N, 2, D). L_feat.T is (D, D).
+    #    Matrix multiplication acts on the last dimension: resulting in (N, 2, D).
+    #    We also scale by subj_sigma.
+    b_s = np.matmul(b_s_white, L_feat.T) * subj_sigma
 
-    if mean_range is None:
-        mean_range = np.array((-0.5, 0))
-    if base_cov is None:
-        base_cov = np.ones((dim, dim))  # Example structured covariance
-        
-    assert base_cov.shape == (dim, dim), f"Base covariance matrix must be of shape (dim, dim), but is {base_cov.shape}"
+    # --- Step 4: Bias Calculation (Class 2) ---
+    w_s = counts_c2[valid_c2] / counts_c2[valid_c2].sum()
+    w_tilde = w_s - np.sum(w_s**2)
+    bias_values = gamma * w_tilde 
     
-    n_measurements_per_subj = generate_n_measurements(n_subjects, n_measurements, random=True, d_temp=d_temp, min_samples=min_samples)
+    bias_expanded = np.repeat(bias_values, counts_c2[valid_c2])[:, np.newaxis]
 
-    data, subject_ids, _ = generate_non_iid_measurements(n_measurements_per_subj, mean_range, base_cov)
-
-    # Let us now generate paired data. This will mimic the case
-    # when we measure effect of a treatment within the same subject.
-    # In the case of stambo, this mimics the case of model comparison.
-    # That is: we have two models on the SAME data. 
-    # A good example here is the accuracy metric. It nicely decomposes into sample-level accuracy,
-    # where 1 is correct prediction, and 0 is incorrect prediction, and we can consider an 
-    # imporved model as "treatment. 
-
-    paired_data = []
-    s_ids_paired = []
-    for s_id in np.unique(subject_ids):
-        subj_data = data[np.where(subject_ids == s_id)]
-        np.random.shuffle(subj_data)
-        for i in range(0, len(subj_data) - 1, 2):
-            paired_data.append((subj_data[i], subj_data[i+1] + effect_size))
-            s_ids_paired.append(s_id)
-            
-    paired_data = np.array(paired_data)
-    s_ids_paired = np.array(s_ids_paired)
+    # --- Step 5: Generate Data with Correlated Noise ---
     
-    return paired_data, s_ids_paired
+    # Class 1
+    # Generate white noise (N, D)
+    eps_c1_white = rng.standard_normal((len(ids_expanded_c1), n_dim))
+    # Apply feature correlation and scale
+    eps_c1 = np.matmul(eps_c1_white, L_feat.T) * noise_sigma
+    
+    b_s1_expanded = b_s[ids_expanded_c1, 0, :] 
+    data_c1 = mu_c1 + b_s1_expanded + eps_c1
 
+    # Class 2
+    eps_c2_white = rng.standard_normal((len(ids_expanded_c2), n_dim))
+    eps_c2 = np.matmul(eps_c2_white, L_feat.T) * noise_sigma
+    
+    b_s2_expanded = b_s[ids_expanded_c2, 1, :]
+    data_c2 = mu_c2 + b_s2_expanded + bias_expanded + eps_c2
+
+    # --- Step 6: Merge ---
+    data = np.concatenate([data_c1, data_c2], axis=0)
+    labels = np.concatenate([np.zeros(len(data_c1)), np.ones(len(data_c2))], axis=0)
+    subject_ids = np.concatenate([ids_expanded_c1, ids_expanded_c2], axis=0)
+
+    perm = rng.permutation(len(data))
+    
+    return data[perm], labels[perm], subject_ids[perm]
 

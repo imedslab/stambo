@@ -3,7 +3,9 @@ name: documentation
 on:
   push:
     branches:
-      - 'main'
+      - main
+      - dev
+  workflow_dispatch:
 permissions:
   contents: write
 
@@ -13,32 +15,27 @@ jobs:
     strategy:
       max-parallel: 1
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v3
+    - uses: actions/checkout@v4
+    - name: Set up uv with Python 3.12
+      uses: astral-sh/setup-uv@v7
       with:
-        python-version: '3.9'
-    - name: Add conda to system path
+        python-version: 3.12
+    - name: Install system dependencies
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
-        echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install dependencies
+        sudo apt-get update
+        sudo apt-get install -y libarchive-dev pandoc
+    - name: Install Python dependencies
       run: |
-        sudo apt-get install -y libarchive-dev
-        conda update --all
-        conda env update --file env.yml --name base
-        pip install -e .
-    - name: Upgrade typing_extensions
-      run: |
-        pip install --upgrade typing_extensions
+        uv venv
+        uv pip install -e ".[dev]"
     - name: Build docs
       run: |
-        cd docs && make html
+        cd docs && uv run make html
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
-      if: ${{ github.ref == 'refs/heads/main' }}
+      if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev' }}
       with:
-        publish_branch: gh-pages
+        publish_branch: ${{ github.ref == 'refs/heads/dev' && 'gh-pages-dev' || 'gh-pages' }}
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/build/html
         force_orphan: true

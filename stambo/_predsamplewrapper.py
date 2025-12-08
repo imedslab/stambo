@@ -3,24 +3,25 @@ import numpy as np
 import numpy.typing as npt
 
 
-PredGtType = npt.NDArray[Union[np.float64, np.int_]]
-PredTuple = Tuple[np.float64, np.int_, Union[np.float64, np.int_]]
-IndexType = Union[int, Iterable[int], npt.NDArray[np.int_]]
+PredGtType = npt.NDArray[Union[float, int]]
+PredTuple = Tuple[float, int, Union[float, int]]
+IndexType = Union[int, Iterable[int], npt.NDArray[int]]
 PredSampleWrapperType = TypeVar("PredSampleWrapperType", bound="PredSampleWrapper")
 
 
 class PredSampleWrapper:
-    def __init__(self: PredSampleWrapperType, predictions: PredGtType, 
-                 gt: PredGtType, multiclass: bool=True, threshold: Optional[float]=0.5,
-                 cached_am: Optional[npt.NDArray[np.int_]]=None):
-        """Wraps predictions and targets in one object.
+    r"""Wraps predictions and targets in one object.
 
         Args:
-            predictions (npt.NDArray[Union[np.float64, np.int64]): _description_
-            gt (npt.NDArray[Union[np.float64 np.int64]]): _description_
-            multiclass (bool, optional): Whether it is a multiclass classifier's sample. Defaults to True.
-            threshold (Optional[float]): Whether to apply the threshold to predictions in the case when we deal with the binary classification. Defaults to 0.5.
-        """
+            predictions: Model predictions to wrap.
+            gt: Ground-truth labels.
+            multiclass: Whether the predictions correspond to a multiclass classifier. Defaults to True.
+            threshold: Threshold to apply to binary predictions when ``multiclass`` is False. Defaults to 0.5.
+            cached_am: Optional cached argmax / thresholded predictions to reuse.
+    """
+    def __init__(self: PredSampleWrapperType, predictions: PredGtType, 
+                 gt: PredGtType, multiclass: bool=True, threshold: Optional[float]=0.5,
+                 cached_am: Optional[npt.NDArray[int]]=None):
 
         self.multiclass = multiclass
         self.predictions = predictions
@@ -39,13 +40,14 @@ class PredSampleWrapper:
         self.gt = gt
 
     def __getitem__(self: PredSampleWrapperType, idx: IndexType) -> Union[PredTuple, PredSampleWrapperType]:
-        """Give access to the predictions and the ground truth by index or a set of indices.
+        r"""Give access to the predictions and the ground truth by index or a set of indices.
 
         Args:
-            idx (Union[int, Iterable[int], npt.NDArray[np.int_]]): Index / indices.
+            idx: Single index or collection of indices.
 
         Returns:
-            Tuple[Union[npt.NDArray[np.int_], npt.NDArray[np.float64]], Union[npt.NDArray[np.int_], npt.NDArray[np.float64]]]: A pair of predictions
+            Either a tuple containing the predictions, argmaxed predictions, and ground truth
+            for a single index, or a new ``PredSampleWrapper`` restricted to the provided indices.
         """
 
         if isinstance(idx, int):

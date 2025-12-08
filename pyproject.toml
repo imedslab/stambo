@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stambo"
+version = "0.1.5"
+description = "A library for statistical model comparison using bootstrap."
+readme = "README.md"
+authors = [
+    { name = "Aleksei Tiulpin", email = "aleksei.tiulpin@gmail.com" }
+]
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=2.0.0",
+    "scikit-learn>=1.3.0",
+    "tqdm>=4.0.0",
+    "matplotlib>=3.9.4",
+    "ipywidgets>=8.1.8"
+]
+keywords = [
+    "statistical testing",
+    "machine learning",
+]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+]
+
+[project.urls]
+Homepage = "https://github.com/imedslab/stambo"
+
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+]
+
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ipython",
+    "ipykernel",
+    "sphinx",
+    "nbsphinx",
+    "nbsphinx-link",
+    "sphinx-rtd-theme",
+    "furo",
+    "typing_extensions",
+    "pandoc"
+]
+
+
+[tool.setuptools.packages.find]
+include = ["stambo"]

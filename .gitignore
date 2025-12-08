@@ -3,7 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 .vscode/
-
+uv.lock
 # C extensions
 *.so
 docs/make.bat
