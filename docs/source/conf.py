@@ -20,6 +20,7 @@ author = 'Aleksei Tiulpin'
 version = __version__
 release = f"v{version}"
 
+
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
@@ -80,4 +81,7 @@ exclude_patterns = []
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = "furo"
-
+html_logo = "_static/logo4.png"
+html_theme_options = {
+    "sidebar_hide_name": True,
+}
