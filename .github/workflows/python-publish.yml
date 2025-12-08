@@ -29,10 +29,9 @@ jobs:
         python-version: 3.12
     - name: Install dependencies
       run: |
-        uv pip install --system build
-        uv pip install --system -e .
-    - name: Build package
-      run: python -m build
+        uv venv
+        uv pip install -e ".[dev]"
+        uv build
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
       with:
