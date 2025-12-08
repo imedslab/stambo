@@ -16,7 +16,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
                     n_bootstrap: int=5000, seed: int=None, 
                     non_paired: bool=False,
                     silent: bool=False) -> Dict[str, Tuple[float]]:
-    r"""Compares whether the empirical difference of statistics computed own two samples is statistically significant or not.
+    r"""Compares whether the empirical difference of statistics computed on two samples is statistically significant or not.
 
     The hypotheses we test are:
 
@@ -35,7 +35,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         groups: Groups indicating the subject for each measurement. Defaults to None.
         statistics: Statistics to compare the samples by.
         alpha: A significance level for confidence intervals (from 0 to 1).
-        n_bootstrap: The number of bootstrap iterations. Defaults to 10000.
+        n_bootstrap: The number of bootstrap iterations. Defaults to 5000.
         non_paired: Whether to use a non-paired design. Defaults to False.
         seed: Random seed. Defaults to None.
         silent: Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
@@ -104,7 +104,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         # Observed difference: Delta
         observed = emp_s2 - emp_s1
         diff_array = result[s_tag][:, 1] - result[s_tag][:, 0]
-        # Generaing the null
+        # Generating the null
         # Model 2 > Model 1 is the alternative hypothesis in one-tailed test
         null = diff_array - observed
         p_val_right = ((null >= observed).sum() + 1.) / (n_bootstrap + 1)
@@ -115,7 +115,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         ci_s1 = (np.percentile(result[s_tag][:, 0], alpha / 2.), np.percentile(result[s_tag][:, 0], 100 - alpha / 2.))
         ci_s2 = (np.percentile(result[s_tag][:, 1], alpha / 2.), np.percentile(result[s_tag][:, 1], 100 - alpha / 2.))
         # And we report the p-value, empirical values, as well as the confidence intervals. 
-        # The the format in the documentation.
+        # The format in the documentation.
         result_final[s_tag] = [p_val_right, observed, ci_es[0], ci_es[1], emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
         result_final[s_tag] = np.array(result_final[s_tag])
     return result_final
@@ -187,7 +187,7 @@ def compare_models(y_test: Union[npt.NDArray[int], npt.NDArray[float]],
             * :math:`M(y_{gt}, \hat y_{1})`
             * :math:`M(y_{gt}, \hat y_{1})_{(\alpha / 2)}`
             * :math:`M(y_{gt}, \hat y_{1})_{(1 - \alpha / 2)}`
-            * :math:`M(y_{gt}, \hat y_{1})`
+            * :math:`M(y_{gt}, \hat y_{2})`
             * :math:`M(y_{gt}, \hat y_{2})_{(\alpha / 2)}`
             * :math:`M(y_{gt}, \hat y_{2})_{(1 - \alpha / 2)}`
     """
