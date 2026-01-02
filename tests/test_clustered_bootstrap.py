@@ -29,8 +29,8 @@ def test_clustered_bootstrap_reduces_false_positives(grouped_gaussian_samples):
         silent=True,
     )
 
-    naive_p = naive["mean"][0]
-    clustered_p = clustered["mean"][0]
+    naive_p = naive["mean"]["p_value"]
+    clustered_p = clustered["mean"]["p_value"]
 
     assert naive_p < 0.01
     assert clustered_p > 0.2

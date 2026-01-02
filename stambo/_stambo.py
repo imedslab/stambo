@@ -94,6 +94,9 @@ def compute_bootstrap_model_test(
     p_val_right = ((null >= observed).sum() + 1.) / (n_bootstrap + 1)
     p_val_left = ((null <= observed).sum() + 1.) / (n_bootstrap + 1)
     p_val = 2 * min(p_val_right, p_val_left)
+    # Numerical / finite-sample guard: two-tailed doubling can exceed 1.0
+    if p_val > 1.0:
+        p_val = 1.0
     # Compute the effect size
     # We also want to compute the confidence intervals
     # In this version of STAMBO, we use the simple percentile method
@@ -179,20 +182,35 @@ def pairwise_bootstrap_test(
                 s_tags_array.append(s_tag)
 
     if adjusted_p_value:
-        if len(p_val_array) > 2:
-            p_val_array = np.array(p_val_array)
-            comparisons_array = np.array(comparisons_array)
-            s_tags_array = np.array(s_tags_array)
-            sorted_indices = np.argsort(p_val_array)
-            # Taking the smallest p-values first
-            p_val_array = p_val_array[sorted_indices]
-            comparisons_array = comparisons_array[sorted_indices]
-            s_tags_array = s_tags_array[sorted_indices]
+        # Holm-Bonferroni step-down correction across *all* performed tests.
+        # We adjust and write back into the nested dict structure under the "p_value" key.
+        if len(p_val_array) > 1:
+            p_vals = np.asarray(p_val_array, dtype=float)
+            comparisons = np.asarray(comparisons_array, dtype=str)
+            s_tags = np.asarray(s_tags_array, dtype=str)
 
-            for i in range(len(p_val_array)):
-                if p_val_array[i] < alpha:
-                    correction = (len(p_val_array) - i + 1)
-                    result_final[s_tags_array[i]][comparisons_array[i]][0] = p_val_array[i] * correction
+            m = len(p_vals)
+            order = np.argsort(p_vals)  # increasing p-values
+
+            p_sorted = p_vals[order]
+            comparisons_sorted = comparisons[order]
+            s_tags_sorted = s_tags[order]
+
+            # Holm adjusted p-values: p_(k) * (m - k), with monotonicity enforcement.
+            p_adj_sorted = np.empty_like(p_sorted)
+            running_max = 0.0
+            for k in range(m):
+                factor = (m - k)
+                adj = p_sorted[k] * factor
+                if adj > 1.0:
+                    adj = 1.0
+                if adj < running_max:
+                    adj = running_max
+                running_max = adj
+                p_adj_sorted[k] = adj
+
+            for k in range(m):
+                result_final[s_tags_sorted[k]][comparisons_sorted[k]]["p_value"] = float(p_adj_sorted[k])
     return result_final
 
 def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
