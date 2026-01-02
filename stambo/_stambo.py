@@ -8,6 +8,55 @@ from .metrics import Metric
 
 from . import metrics as metricslib
 
+def bootstrap_arrays(arrays: tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper]],
+                     statistics: Dict[str, Callable],
+                     groups: Optional[npt.NDArray[int]]=None,
+                     n_bootstrap: int=5000,
+                     silent: bool=False) -> tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper]]:
+    r"""
+    Bootstraps an array of mutually paired samples.
+    Perfect if we want to establish how a set of models are related to each other.
+
+    Args:
+        arrays: A tuple of arrays to bootstrap. Each array is a sample.
+        statistics: A dictionary of statistics to compute.
+        groups: Groups indicating the subject for each measurement. Defaults to None.
+        n_bootstrap: The number of bootstrap iterations. Defaults to 5000.
+        silent: Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
+
+    Returns:
+        A dictionary of statistics values for each bootstrap iteration and each sample.
+    """
+
+    arr_lengths = np.array([len(arr) for arr in arrays])
+    assert np.all(arr_lengths == arr_lengths[0]), "All arrays must have the same length"
+
+    if groups is not None:
+        groups_ids = np.unique(groups)
+        group_data = {}
+        for group_id in groups_ids:
+            group_data[group_id] = {"indices": np.where(groups == group_id)[0]}
+    else:
+        group_data = None
+
+    result = {s_tag: np.zeros((n_bootstrap, len(arrays))) for s_tag in statistics}
+    for bootstrap_iter in pbar(range(n_bootstrap), total=n_bootstrap, desc="Bootstrapping", silent=silent):
+        # We are here in a paired design, so we need to sample the same indices for both samples
+        if group_data is None:
+            ind = np.random.choice(arr_lengths[0], arr_lengths[0], replace=True)
+        else:
+            # When we have groups, we need to sample them with replacement
+            groups_ind = np.random.choice(groups_ids, len(groups_ids), replace=True)
+            # Once the groups are sampled, we can concatenate the indices
+            ind = np.concatenate([group_data[grp]["indices"] for grp in groups_ind])
+            
+        for s_tag in statistics:
+            for sample_idx in range(len(arrays)):
+                v = statistics[s_tag](arrays[sample_idx][ind])
+                result[s_tag][bootstrap_iter, sample_idx] = v
+
+    return result
+
 def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
                     sample_2: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
                     statistics: Dict[str, Callable], 
@@ -76,25 +125,17 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         for group_id in groups_ids:
             group_data[group_id] = {"indices": np.where(groups == group_id)[0]}
 
-    for bootstrap_iter in pbar(range(n_bootstrap), total=n_bootstrap, desc="Bootstrapping", silent=silent):
-        # We are here in a paired design, so we need to sample the same indices for both samples
-        if groups is None:
-            ind = np.random.choice(len(sample_1), len(sample_1), replace=True)
-            ind1 = ind
-            ind2 = ind
-            if non_paired:
-                ind2 = np.random.choice(len(sample_2), len(sample_2), replace=True)
-        else:
-            # When we have groups, we need to sample them with replacement
-            groups_ind = np.random.choice(groups_ids, len(groups_ids), replace=True)
-            # Once the groups are sampled, we can concatenate the indices
-            ind = np.concatenate([group_data[grp]["indices"] for grp in groups_ind])
-            ind1 = ind
-            ind2 = ind
-            
-        for s_tag in statistics:
-            result[s_tag][bootstrap_iter, 0] = statistics[s_tag](sample_1[ind1])
-            result[s_tag][bootstrap_iter, 1] = statistics[s_tag](sample_2[ind2])
+    if non_paired:
+        # This is a simple case of non-paired, non grouped design
+        # We will rarely use it in practice, but it is still a valid test
+        for bootstrap_iter in pbar(range(n_bootstrap), total=n_bootstrap, desc="Bootstrapping", silent=silent):
+            ind1 = np.random.choice(len(sample_1), len(sample_1), replace=True)
+            ind2 = np.random.choice(len(sample_2), len(sample_2), replace=True)
+            for s_tag in statistics:
+                result[s_tag][bootstrap_iter, 0] = statistics[s_tag](sample_1[ind1])
+                result[s_tag][bootstrap_iter, 1] = statistics[s_tag](sample_2[ind2])
+
+    result = bootstrap_arrays((sample_1, sample_2), statistics=statistics, groups=groups, n_bootstrap=n_bootstrap, silent=silent)
     
     result_final = {}
     for s_tag in result:
