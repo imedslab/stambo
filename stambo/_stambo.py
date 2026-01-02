@@ -57,6 +57,144 @@ def bootstrap_arrays(arrays: tuple[Union[npt.NDArray[int], npt.NDArray[float], P
 
     return result
 
+
+def compute_bootstrap_model_test(
+    bootstrap_results: Dict[str, npt.NDArray[float]],   
+    samples: tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper]],
+    i: int,
+    j: int,
+    statistic: str,
+    statistics_dict: Dict[str, Callable],
+    alpha: float=0.05) -> Dict[str, Tuple[float]]:
+    r"""Computes the bootstrap test for a model comparison.
+    """
+    n_bootstrap_i = len(bootstrap_results[statistic][:, i])
+    n_bootstrap_j = len(bootstrap_results[statistic][:, j])
+    n_bootstrap = n_bootstrap_i
+    # Some sanity checks
+    assert n_bootstrap_i == n_bootstrap_j, "The number of bootstrap samples must be the same for both models"
+    assert n_bootstrap > 0, "The number of bootstrap samples must be greater than 0"
+    assert i < len(samples), "The index i must be less than the number of samples"
+    assert j < len(samples), "The index j must be less than the number of samples"
+    assert i != j, "The index i and j must be different"
+    assert statistic in bootstrap_results, "The statistic must be in the bootstrap results"
+    assert statistic in statistics_dict, "The statistic must be in the statistics dictionary"
+    sample_1_b = bootstrap_results[statistic][:, i]
+    sample_2_b = bootstrap_results[statistic][:, j]
+
+    emp_s1 = statistics_dict[statistic](samples[i])
+    emp_s2 = statistics_dict[statistic](samples[j]) 
+
+    # Observed difference: Delta
+    observed = emp_s2 - emp_s1
+    diff_array = sample_2_b - sample_1_b
+    # Generating the null
+    # Model 2 != Model 1 is the alternative hypothesis in two-tailed test
+    null = diff_array - observed
+    p_val_right = ((null >= observed).sum() + 1.) / (n_bootstrap + 1)
+    p_val_left = ((null <= observed).sum() + 1.) / (n_bootstrap + 1)
+    p_val = 2 * min(p_val_right, p_val_left)
+    # Compute the effect size
+    # We also want to compute the confidence intervals
+    # In this version of STAMBO, we use the simple percentile method
+    ci_es = (np.percentile(diff_array, alpha / 2.), np.percentile(diff_array, 100 - alpha / 2.))
+    ci_s1 = (np.percentile(sample_1_b, alpha / 2.), np.percentile(sample_1_b, 100 - alpha / 2.))
+    ci_s2 = (np.percentile(sample_2_b, alpha / 2.), np.percentile(sample_2_b, 100 - alpha / 2.))
+
+    return {
+        "p_value": p_val,
+        "diff": observed,
+        "ci_es": ci_es,
+        "ci_s1": ci_s1, 
+        "ci_s2": ci_s2,
+        "emp_s1": emp_s1,
+        "emp_s2": emp_s2,
+        "statistic": statistic
+    }
+
+def pairwise_bootstrap_test(
+    bootstrap_results: Dict[str, npt.NDArray[float]],   
+    samples: tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper]],
+    statistics: Dict[str, Callable],
+    labels: Optional[Tuple[str, str]]=None,
+    adjusted_p_value: bool=False,
+    alpha: float=0.05) -> Dict[str, Tuple[float]]:
+    r"""
+        Performs a pairwise bootstrap test to compare the statistics of the bootstrap results.
+        Note: if N samples are compared, there will be N*(N-1)/2 comparisons.
+        When N samples are compared, the p-values are adjusted using the Bonforroni-Holm correction.
+
+        Args:
+            bootstrap_results: A dictionary of bootstrap results.
+            samples: A tuple of samples.
+            statistics: A dictionary of statistics to compute.
+            labels: A tuple of labels for the samples. Defaults to None.
+            adjusted_p_value: Whether to adjust the p-value for multiple testing. Defaults to True. 
+            alpha: A significance level for confidence intervals (from 0 to 1). Defaults to 0.05.
+
+        Returns:
+            A dictionary of statistics values for each bootstrap iteration and each sample. 
+            If adjusted_p_value is True, the p-values are adjusted.
+    """
+    result_final = {}
+    arr_lengths = np.array([len(arr) for arr in samples])
+    if labels is None:
+        labels = [f"Model {i}" for i in range(len(samples))]
+    assert len(labels) == len(samples), "The number of labels must be the same as the number of samples"
+    assert np.all(arr_lengths == arr_lengths[0]), "All arrays must have the same length"
+    p_val_array = []
+    comparisons_array = []
+    s_tags_array = []
+    # Going over statistics
+    for s_tag in bootstrap_results:
+        result_final[s_tag] = {}
+        for i in range(len(samples)):
+            for j in range(i+1, len(samples)):
+                # We always take the second model as the improved
+                label = f"{labels[i]} / {labels[j]}"
+
+                result_final[s_tag][label] = {}
+                
+                # And we report the p-value, empirical values, as well as the confidence intervals. 
+                # The format in the documentation.
+                b_res = compute_bootstrap_model_test(
+                    bootstrap_results=bootstrap_results, 
+                    samples=samples, 
+                    i=i, j=j, 
+                    statistic=s_tag, 
+                    statistics_dict=statistics, 
+                    alpha=alpha
+                )
+
+                result_final[s_tag][label]["p_value"] = b_res["p_value"]
+                result_final[s_tag][label]["diff"] = b_res["diff"]
+                result_final[s_tag][label]["ci_es"] = b_res["ci_es"]
+                result_final[s_tag][label]["ci_s1"] = b_res["ci_s1"]
+                result_final[s_tag][label]["ci_s2"] = b_res["ci_s2"]
+                result_final[s_tag][label]["emp_s1"] = b_res["emp_s1"]
+                result_final[s_tag][label]["emp_s2"] = b_res["emp_s2"]
+
+                p_val_array.append(b_res["p_value"])
+                comparisons_array.append(label)
+                s_tags_array.append(s_tag)
+
+    if adjusted_p_value:
+        if len(p_val_array) > 2:
+            p_val_array = np.array(p_val_array)
+            comparisons_array = np.array(comparisons_array)
+            s_tags_array = np.array(s_tags_array)
+            sorted_indices = np.argsort(p_val_array)
+            # Taking the smallest p-values first
+            p_val_array = p_val_array[sorted_indices]
+            comparisons_array = comparisons_array[sorted_indices]
+            s_tags_array = s_tags_array[sorted_indices]
+
+            for i in range(len(p_val_array)):
+                if p_val_array[i] < alpha:
+                    correction = (len(p_val_array) - i + 1)
+                    result_final[s_tags_array[i]][comparisons_array[i]][0] = p_val_array[i] * correction
+    return result_final
+
 def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
                     sample_2: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
                     statistics: Dict[str, Callable], 
@@ -135,33 +273,28 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
                 result[s_tag][bootstrap_iter, 0] = statistics[s_tag](sample_1[ind1])
                 result[s_tag][bootstrap_iter, 1] = statistics[s_tag](sample_2[ind2])
 
-    result = bootstrap_arrays((sample_1, sample_2), statistics=statistics, groups=groups, n_bootstrap=n_bootstrap, silent=silent)
-    
-    result_final = {}
-    for s_tag in result:
-        emp_s1 = statistics[s_tag](sample_1)
-        emp_s2 = statistics[s_tag](sample_2) 
+    bootstrap_result = bootstrap_arrays(
+        arrays=(sample_1, sample_2), 
+        statistics=statistics, 
+        groups=groups, 
+        n_bootstrap=n_bootstrap, 
+        silent=silent
+    )
+    result_final = pairwise_bootstrap_test(
+        bootstrap_result, 
+        samples=(sample_1, sample_2), 
+        statistics=statistics, 
+        labels=None, 
+        alpha=alpha
+    )
 
-        # Observed difference: Delta
-        observed = emp_s2 - emp_s1
-        diff_array = result[s_tag][:, 1] - result[s_tag][:, 0]
-        # Generating the null
-        # Model 2 > Model 1 is the alternative hypothesis in one-tailed test
-        null = diff_array - observed
-        p_val_right = ((null >= observed).sum() + 1.) / (n_bootstrap + 1)
-        p_val_left = ((null <= observed).sum() + 1.) / (n_bootstrap + 1)
-        p_val = 2 * min(p_val_right, p_val_left)
-        # Compute the effect size
-        # We also want to compute the confidence intervals
-        # In this version of STAMBO, we use the simple percentile method
-        ci_es = (np.percentile(diff_array, alpha / 2.), np.percentile(diff_array, 100 - alpha / 2.))
-        ci_s1 = (np.percentile(result[s_tag][:, 0], alpha / 2.), np.percentile(result[s_tag][:, 0], 100 - alpha / 2.))
-        ci_s2 = (np.percentile(result[s_tag][:, 1], alpha / 2.), np.percentile(result[s_tag][:, 1], 100 - alpha / 2.))
-        # And we report the p-value, empirical values, as well as the confidence intervals. 
-        # The format in the documentation.
-        result_final[s_tag] = [p_val, observed, ci_es[0], ci_es[1], emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
-        result_final[s_tag] = np.array(result_final[s_tag])
-    return result_final
+    results_return = {}
+    # This is a necessary post-processing step
+    # The pairwise bootstrap has only two models, so, the labels are not needed
+    for s_tag in statistics:
+        comaprison_label = list(result_final[s_tag].keys())[0]
+        results_return[s_tag] = result_final[s_tag][comaprison_label]
+    return results_return
 
 
 def compare_models(y_test: Union[npt.NDArray[int], npt.NDArray[float]], 

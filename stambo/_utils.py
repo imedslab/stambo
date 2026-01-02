@@ -63,22 +63,32 @@ def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_na
     tbl += m1_name
     # Filling the first row
     for metric in report:
-        tbl += " & " + f"${report[metric][4]:.{n_digits}f}$ [${report[metric][5]:.{n_digits}f}$-${report[metric][6]:.{n_digits}f}$]"
+        emp_s1 = report[metric]["emp_s1"]
+        ci_low_s1 = report[metric]["ci_s1"][0]
+        ci_high_s1 = report[metric]["ci_s1"][1]
+        tbl += " & " + f"${emp_s1:.{n_digits}f}$ [${ci_low_s1:.{n_digits}f}$-${ci_high_s1:.{n_digits}f}$]"
     tbl += " \\\\ \n"
     tbl += m2_name
     # Filling the second row
     for metric in report:
-        tbl += " & " + f"${report[metric][7]:.{n_digits}f}$ [${report[metric][8]:.{n_digits}f}$-${report[metric][9]:.{n_digits}f}$]"
+        emp_s2 = report[metric]["emp_s2"]
+        ci_low_s2 = report[metric]["ci_s2"][0]
+        ci_high_s2 = report[metric]["ci_s2"][1]
+        tbl += " & " + f"${emp_s2:.{n_digits}f}$ [${ci_low_s2:.{n_digits}f}$-${ci_high_s2:.{n_digits}f}$]"
     tbl += " \\\\ \n\\midrule\n"
     # Filling the final row with p-value per metric
     tbl += "Effect size"
     for metric in report:
-        tbl += " & " + f"${report[metric][1]:.{n_digits}f}$ [${report[metric][2]:.{n_digits}f}$-${report[metric][3]:.{n_digits}f}]$"
+        diff = report[metric]["diff"]
+        ci_low_diff = report[metric]["ci_es"][0]
+        ci_high_diff = report[metric]["ci_es"][1]
+        tbl += " & " + f"${diff:.{n_digits}f}$ [${ci_low_diff:.{n_digits}f}$-${ci_high_diff:.{n_digits}f}]$"
     tbl += " \\\\ \n\\midrule\n"
     
     tbl += "$p$-value"
     for metric in report:
-        tbl += " & " + f"${report[metric][0]:.{n_digits}f}$"
+        p_value = report[metric]["p_value"]
+        tbl += " & " + f"${p_value:.{n_digits}f}$"
     tbl += " \\\\ \n\\bottomrule\n"
     # Final row
     tbl += "\\end{tabular}"
