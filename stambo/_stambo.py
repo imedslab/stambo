@@ -105,15 +105,60 @@ def compute_bootstrap_model_test(
     ci_s2 = (np.percentile(sample_2_b, alpha / 2.), np.percentile(sample_2_b, 100 - alpha / 2.))
 
     return {
-        "p_value": p_val,
-        "diff": observed,
-        "ci_es": ci_es,
-        "ci_s1": ci_s1, 
-        "ci_s2": ci_s2,
-        "emp_s1": emp_s1,
-        "emp_s2": emp_s2,
-        "statistic": statistic
+        "p_value": float(p_val),
+        "diff": float(observed),
+        "ci_es": (float(ci_es[0]), float(ci_es[1])),
+        "ci_s1": (float(ci_s1[0]), float(ci_s1[1])), 
+        "ci_s2": (float(ci_s2[0]), float(ci_s2[1])),
+        "emp_s1": float(emp_s1),
+        "emp_s2": float(emp_s2),
     }
+
+def apply_correction(
+    results: Dict[str, Dict[str, Dict[str, float]]],
+    p_values: npt.NDArray[float],
+    comparisons: npt.NDArray[str],
+    s_tags: npt.NDArray[str]) -> npt.NDArray[float]:
+    r"""Applies the Holm-Bonferroni correction to the p-values.
+    """
+    # Holm-Bonferroni step-down correction across *all* performed tests.
+    # We adjust and write back into the nested dict structure under the "p_value" key.
+    p_values = np.asarray(p_values, dtype=float)
+    comparisons = np.asarray(comparisons, dtype=str)
+    s_tags = np.asarray(s_tags, dtype=str)
+
+    if len(p_values) <= 1:
+        return p_values
+
+    m = len(p_values)
+    order = np.argsort(p_values)  # increasing p-values
+
+    p_sorted = p_values[order]
+    comparisons_sorted = comparisons[order]
+    s_tags_sorted = s_tags[order]
+
+    # Holm adjusted p-values: p_(k) * (m - k), with monotonicity enforcement.
+    p_adj_sorted = np.empty_like(p_sorted)
+    running_max = 0.0
+    for k in range(m):
+        factor = (m - k)
+        adj = p_sorted[k] * factor
+        if adj > 1.0:
+            adj = 1.0
+        if adj < running_max:
+            adj = running_max
+        running_max = adj
+        p_adj_sorted[k] = adj
+
+    # Map back to original order
+    p_adj = np.empty_like(p_values)
+    p_adj[order] = p_adj_sorted
+
+    # Write back into results dict
+    for k in range(m):
+        results[s_tags_sorted[k]][comparisons_sorted[k]]["p_value"] = float(p_adj_sorted[k])
+
+    return p_adj
 
 def pairwise_bootstrap_test(
     bootstrap_results: Dict[str, npt.NDArray[float]],   
@@ -182,35 +227,12 @@ def pairwise_bootstrap_test(
                 s_tags_array.append(s_tag)
 
     if adjusted_p_value:
-        # Holm-Bonferroni step-down correction across *all* performed tests.
-        # We adjust and write back into the nested dict structure under the "p_value" key.
-        if len(p_val_array) > 1:
-            p_vals = np.asarray(p_val_array, dtype=float)
-            comparisons = np.asarray(comparisons_array, dtype=str)
-            s_tags = np.asarray(s_tags_array, dtype=str)
-
-            m = len(p_vals)
-            order = np.argsort(p_vals)  # increasing p-values
-
-            p_sorted = p_vals[order]
-            comparisons_sorted = comparisons[order]
-            s_tags_sorted = s_tags[order]
-
-            # Holm adjusted p-values: p_(k) * (m - k), with monotonicity enforcement.
-            p_adj_sorted = np.empty_like(p_sorted)
-            running_max = 0.0
-            for k in range(m):
-                factor = (m - k)
-                adj = p_sorted[k] * factor
-                if adj > 1.0:
-                    adj = 1.0
-                if adj < running_max:
-                    adj = running_max
-                running_max = adj
-                p_adj_sorted[k] = adj
-
-            for k in range(m):
-                result_final[s_tags_sorted[k]][comparisons_sorted[k]]["p_value"] = float(p_adj_sorted[k])
+        apply_correction(
+            results=result_final,
+            p_values=p_val_array, 
+            comparisons=comparisons_array, 
+            s_tags=s_tags_array
+        )
     return result_final
 
 def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
