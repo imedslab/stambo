@@ -17,6 +17,10 @@ def bootstrap_arrays(arrays: tuple[Union[npt.NDArray[int], npt.NDArray[float], P
     Bootstraps an array of mutually paired samples.
     Perfect if we want to establish how a set of models are related to each other.
 
+    Note: this function is for the future releases of STAMBO, where, we will introduce a new API.
+    For now, it is only used internally to power the two-model comparison case. 
+    You can still use it in your analyses and build on top of it.
+
     Args:
         arrays: A tuple of arrays to bootstrap. Each array is a sample.
         statistics: A dictionary of statistics to compute.
@@ -120,6 +124,27 @@ def apply_correction(
     comparisons: npt.NDArray[str],
     s_tags: npt.NDArray[str]) -> npt.NDArray[float]:
     r"""Applies the Holm-Bonferroni correction to the p-values.
+    Args:
+        results: A dictionary of results.
+            The format is:
+            {
+                "statistic": {
+                    "comparison_label": {
+                        "p_value": float,
+                        "diff": float,
+                        "ci_es": (float, float),
+                        "ci_s1": (float, float),
+                        "ci_s2": (float, float),
+                        "emp_s1": float,
+                        "emp_s2": float,
+                    }
+                }
+            }
+        p_values: A list of p-values.
+        comparisons: A list of comparisons.
+        s_tags: A list of statistics tags.
+    Returns:
+        A dictionary of results with adjusted p-values.
     """
     # Holm-Bonferroni step-down correction across *all* performed tests.
     # We adjust and write back into the nested dict structure under the "p_value" key.
@@ -161,24 +186,32 @@ def apply_correction(
     return p_adj
 
 def pairwise_bootstrap_test(
-    bootstrap_results: Dict[str, npt.NDArray[float]],   
     samples: tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper]],
     statistics: Dict[str, Callable],
-    labels: Optional[Tuple[str, str]]=None,
+    bootstrap_results: Optional[Dict[str, npt.NDArray[float]]]=None,
+    labels: Optional[Tuple[str, ...]]=None,
     adjusted_p_value: bool=False,
-    alpha: float=0.05) -> Dict[str, Tuple[float]]:
+    alpha: float=0.05,
+    n_bootstrap: int=5000,
+    silent: bool=False) -> Dict[str, Tuple[float]]:
     r"""
         Performs a pairwise bootstrap test to compare the statistics of the bootstrap results.
-        Note: if N samples are compared, there will be N*(N-1)/2 comparisons.
+        Note: if N samples are compared, there will be `N(N-1)/2` comparisons.
         When N samples are compared, the p-values are adjusted using the Bonforroni-Holm correction.
 
+        Note: this function is for the future releases of STAMBO, where, we will introduce a new API.
+        For now, it is only used internally to power the two-model comparison case. 
+        You can still use it in your analyses and build on top of it.
+
         Args:
-            bootstrap_results: A dictionary of bootstrap results.
             samples: A tuple of samples.
             statistics: A dictionary of statistics to compute.
-            labels: A tuple of labels for the samples. Defaults to None.
+            bootstrap_results: A dictionary of bootstrap results. If None, bootstrap results are computed internally.
+            labels: A tuple of labels for the samples. Defaults to None. If None, the labels are automatically generated as "0", "1", "2", ..., "N-1".
             adjusted_p_value: Whether to adjust the p-value for multiple testing. Defaults to True. 
             alpha: A significance level for confidence intervals (from 0 to 1). Defaults to 0.05.
+            n_bootstrap: Number of bootstrap iterations used when bootstrap_results is None. Defaults to 5000.
+            silent: Whether to execute silently (no progress bar) when bootstrap_results is None. Defaults to False.
 
         Returns:
             A dictionary of statistics values for each bootstrap iteration and each sample. 
@@ -187,14 +220,26 @@ def pairwise_bootstrap_test(
     result_final = {}
     arr_lengths = np.array([len(arr) for arr in samples])
     if labels is None:
-        labels = [f"Model {i}" for i in range(len(samples))]
+        labels = [f"{i}" for i in range(len(samples))]
     assert len(labels) == len(samples), "The number of labels must be the same as the number of samples"
     assert np.all(arr_lengths == arr_lengths[0]), "All arrays must have the same length"
     p_val_array = []
     comparisons_array = []
     s_tags_array = []
     # Going over statistics
-    for s_tag in bootstrap_results:
+    if bootstrap_results is None:
+        bootstrap_results = bootstrap_arrays(
+            arrays=samples,
+            statistics=statistics,
+            n_bootstrap=n_bootstrap,
+            silent=silent
+        )
+    else:
+        assert len(bootstrap_results) == len(statistics), "The number of bootstrap results must be the same as the number of statistics"
+        assert all(s_tag in bootstrap_results for s_tag in statistics), "All statistics must be in the bootstrap results"
+        assert all(s_tag in statistics for s_tag in bootstrap_results), "All statistics must be in the statistics dictionary"
+    
+    for s_tag in statistics:
         result_final[s_tag] = {}
         for i in range(len(samples)):
             for j in range(i+1, len(samples)):
@@ -268,8 +313,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         silent: Whether to execute the function silently, i.e. not showing the progress bar. Defaults to False.
 
     Returns:
-        A dictionary containing a tuple with the empirical value of
-        the metric, and the p-value. Each entry in the dictionary contains, in order:
+        A dictionary containing:
 
             * Two-tailed :math:`p(H_0 \mid \texttt{data})`
             * Observed difference (effect size)
@@ -289,9 +333,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
     alpha = 100 * alpha
 
 
-    # Dict to store the null bootstrap distribution
-    result = {s_tag: np.zeros((n_bootstrap, 2)) for s_tag in statistics}
-    
+    # Dict to store the null bootstrap distribution    
     if groups is not None:
         assert len(groups) == len(sample_1), "Groups must be of the same length as the samples"
         assert len(groups) == len(sample_2), "Groups must be of the same length as the samples"
@@ -306,26 +348,27 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
     if non_paired:
         # This is a simple case of non-paired, non grouped design
         # We will rarely use it in practice, but it is still a valid test
+        bootstrap_result = {s_tag: {"0 / 1": np.zeros((n_bootstrap, 2))} for s_tag in statistics}
         for bootstrap_iter in pbar(range(n_bootstrap), total=n_bootstrap, desc="Bootstrapping", silent=silent):
             ind1 = np.random.choice(len(sample_1), len(sample_1), replace=True)
             ind2 = np.random.choice(len(sample_2), len(sample_2), replace=True)
             for s_tag in statistics:
-                result[s_tag][bootstrap_iter, 0] = statistics[s_tag](sample_1[ind1])
-                result[s_tag][bootstrap_iter, 1] = statistics[s_tag](sample_2[ind2])
-
-    bootstrap_result = bootstrap_arrays(
-        arrays=(sample_1, sample_2), 
-        statistics=statistics, 
-        groups=groups, 
-        n_bootstrap=n_bootstrap, 
-        silent=silent
-    )
+                bootstrap_result[s_tag]["0 / 1"][bootstrap_iter, 0] = statistics[s_tag](sample_1[ind1])
+                bootstrap_result[s_tag]["0 / 1"][bootstrap_iter, 1] = statistics[s_tag](sample_2[ind2])
+    else:
+        bootstrap_result = bootstrap_arrays(
+            arrays=(sample_1, sample_2), 
+            statistics=statistics, 
+            groups=groups, 
+            n_bootstrap=n_bootstrap, 
+            silent=silent
+        )
     result_final = pairwise_bootstrap_test(
-        bootstrap_result, 
-        samples=(sample_1, sample_2), 
-        statistics=statistics, 
-        labels=None, 
-        alpha=alpha
+        samples=(sample_1, sample_2),
+        statistics=statistics,
+        bootstrap_results=bootstrap_result,
+        labels=None,
+        alpha=alpha,
     )
 
     results_return = {}
