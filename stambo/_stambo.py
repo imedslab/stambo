@@ -71,11 +71,21 @@ def compute_bootstrap_model_test(
     statistics_dict: Dict[str, Callable],
     alpha: float=0.05) -> Dict[str, Tuple[float]]:
     r"""Computes the bootstrap test for a model comparison.
+
+    Args:
+        bootstrap_results: A dictionary of bootstrap results.
+        samples: A tuple of samples.
+        i: The index of the first sample.
+        j: The index of the second sample.
+        statistic: The statistic to compute.
+        statistics_dict: A dictionary of statistics to compute.
+        alpha: A significance level for confidence intervals (from 0 to 1). Defaults to 0.05.
     """
     n_bootstrap_i = len(bootstrap_results[statistic][:, i])
     n_bootstrap_j = len(bootstrap_results[statistic][:, j])
     n_bootstrap = n_bootstrap_i
     # Some sanity checks
+    assert alpha >= 0.0 and alpha <= 1.0, "The alpha must be between 0 and 1"
     assert n_bootstrap_i == n_bootstrap_j, "The number of bootstrap samples must be the same for both models"
     assert n_bootstrap > 0, "The number of bootstrap samples must be greater than 0"
     assert i < len(samples), "The index i must be less than the number of samples"
@@ -103,10 +113,20 @@ def compute_bootstrap_model_test(
         p_val = 1.0
     # Compute the effect size
     # We also want to compute the confidence intervals
-    # In this version of STAMBO, we use the simple percentile method
-    ci_es = (np.percentile(diff_array, alpha / 2.), np.percentile(diff_array, 100 - alpha / 2.))
-    ci_s1 = (np.percentile(sample_1_b, alpha / 2.), np.percentile(sample_1_b, 100 - alpha / 2.))
-    ci_s2 = (np.percentile(sample_2_b, alpha / 2.), np.percentile(sample_2_b, 100 - alpha / 2.))
+    # Public API uses alpha as a fraction in [0, 1].
+    alpha_pct = 100.0 * alpha
+    ci_es = (
+        np.percentile(diff_array, alpha_pct / 2.0),
+        np.percentile(diff_array, 100.0 - alpha_pct / 2.0),
+    )
+    ci_s1 = (
+        np.percentile(sample_1_b, alpha_pct / 2.0),
+        np.percentile(sample_1_b, 100.0 - alpha_pct / 2.0),
+    )
+    ci_s2 = (
+        np.percentile(sample_2_b, alpha_pct / 2.0),
+        np.percentile(sample_2_b, 100.0 - alpha_pct / 2.0),
+    )
 
     return {
         "p_value": float(p_val),
@@ -185,7 +205,7 @@ def apply_correction(
     for k in range(m):
         results[s_tags_sorted[k]][comparisons_sorted[k]]["p_value"] = float(p_adj_sorted[k])
 
-    return p_adj
+    return results
 
 def pairwise_bootstrap_test(
     samples: tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper]],
@@ -330,9 +350,6 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
     
     if seed is not None:
         np.random.seed(seed)
-
-    alpha = 100 * alpha
-
 
     # Dict to store the null bootstrap distribution    
     if groups is not None:
