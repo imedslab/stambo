@@ -119,10 +119,7 @@ def compute_bootstrap_model_test(
     }
 
 def apply_correction(
-    results: Dict[str, Dict[str, Dict[str, float]]],
-    p_values: npt.NDArray[float],
-    comparisons: npt.NDArray[str],
-    s_tags: npt.NDArray[str]) -> npt.NDArray[float]:
+    results: Dict[str, Dict[str, Dict[str, float]]]) -> Dict[str, Dict[str, Dict[str, float]]]:
     r"""Applies the Holm-Bonferroni correction to the p-values.
     Args:
         results: A dictionary of results.
@@ -140,20 +137,25 @@ def apply_correction(
                     }
                 }
             }
-        p_values: A list of p-values.
-        comparisons: A list of comparisons.
-        s_tags: A list of statistics tags.
     Returns:
         A dictionary of results with adjusted p-values.
     """
     # Holm-Bonferroni step-down correction across *all* performed tests.
     # We adjust and write back into the nested dict structure under the "p_value" key.
+    
+    p_values = []
+    comparisons = []
+    s_tags = []
+    for s_tag in results:
+        for comparison in results[s_tag]:
+            p_values.append(results[s_tag][comparison]["p_value"])
+            comparisons.append(comparison)
+            s_tags.append(s_tag)
+    if len(p_values) <= 1:
+        return results
     p_values = np.asarray(p_values, dtype=float)
     comparisons = np.asarray(comparisons, dtype=str)
     s_tags = np.asarray(s_tags, dtype=str)
-
-    if len(p_values) <= 1:
-        return p_values
 
     m = len(p_values)
     order = np.argsort(p_values)  # increasing p-values
@@ -188,6 +190,7 @@ def apply_correction(
 def pairwise_bootstrap_test(
     samples: tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper]],
     statistics: Dict[str, Callable],
+    groups: Optional[npt.NDArray[int]]=None,
     bootstrap_results: Optional[Dict[str, npt.NDArray[float]]]=None,
     labels: Optional[Tuple[str, ...]]=None,
     adjusted_p_value: bool=False,
@@ -206,6 +209,7 @@ def pairwise_bootstrap_test(
         Args:
             samples: A tuple of samples.
             statistics: A dictionary of statistics to compute.
+            groups: Groups indicating the subject for each measurement. Defaults to None.
             bootstrap_results: A dictionary of bootstrap results. If None, bootstrap results are computed internally.
             labels: A tuple of labels for the samples. Defaults to None. If None, the labels are automatically generated as "0", "1", "2", ..., "N-1".
             adjusted_p_value: Whether to adjust the p-value for multiple testing. Defaults to True. 
@@ -231,6 +235,7 @@ def pairwise_bootstrap_test(
         bootstrap_results = bootstrap_arrays(
             arrays=samples,
             statistics=statistics,
+            groups=groups,
             n_bootstrap=n_bootstrap,
             silent=silent
         )
@@ -272,12 +277,8 @@ def pairwise_bootstrap_test(
                 s_tags_array.append(s_tag)
 
     if adjusted_p_value:
-        apply_correction(
-            results=result_final,
-            p_values=p_val_array, 
-            comparisons=comparisons_array, 
-            s_tags=s_tags_array
-        )
+        # This is done in place
+        apply_correction(results=result_final)
     return result_final
 
 def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 

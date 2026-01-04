@@ -34,3 +34,4 @@ def grouped_gaussian_samples() -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         np.concatenate(sample_2),
         np.concatenate(groups),
     )
+
