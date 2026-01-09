@@ -3,12 +3,12 @@ from typing import Callable
 import numpy as np
 from sklearn.metrics import roc_auc_score, average_precision_score, f1_score
 from sklearn.metrics import cohen_kappa_score, balanced_accuracy_score, matthews_corrcoef
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, accuracy_score
 from functools import partial
 
 from ._predsamplewrapper import PredSampleWrapper
 
-__all__ = ["Metric", "ROCAUC", "AP", "F1Score", "QKappa", "BACC", "MCC", "MSE", "MAE", "LogOddsRatio"]
+__all__ = ["Metric", "ROCAUC", "AP", "F1Score", "QKappa", "BACC", "Accuracy", "MCC", "MSE", "MAE", "LogOddsRatio"]
 
 # Base metric class
 class Metric:
@@ -86,6 +86,15 @@ class BACC(Metric):
 
     def __str__(self) -> str:
         return "BACC"
+
+class Accuracy(Metric):
+    r"""The accuracy score.
+    """
+    def __init__(self) -> None:
+        Metric.__init__(self, accuracy_score, int_input=True)
+
+    def __str__(self) -> str:
+        return "Accuracy"
 
 class MCC(Metric):
     r"""The Matthew's correlation coefficient
