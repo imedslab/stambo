@@ -1,5 +1,6 @@
 from typing import Callable
 
+import numpy as np
 from sklearn.metrics import roc_auc_score, average_precision_score, f1_score
 from sklearn.metrics import cohen_kappa_score, balanced_accuracy_score, matthews_corrcoef
 from sklearn.metrics import mean_absolute_error, mean_squared_error
@@ -7,7 +8,7 @@ from functools import partial
 
 from ._predsamplewrapper import PredSampleWrapper
 
-__all__ = ["Metric", "ROCAUC", "AP", "F1Score", "QKappa", "BACC", "MCC", "MSE", "MAE"]
+__all__ = ["Metric", "ROCAUC", "AP", "F1Score", "QKappa", "BACC", "MCC", "MSE", "MAE", "LogOddsRatio"]
 
 # Base metric class
 class Metric:
@@ -115,7 +116,32 @@ class MAE(Metric):
     def __str__(self) -> str:
         return "MAE"
 
+class LogOddsRatio(Metric):
+    r"""The log odds ratio.
+    """
+    epsilon = 1e-4
+    def __init__(self) -> None:
+        Metric.__init__(self, None, int_input=False)
 
+    def __call__(self, sample: PredSampleWrapper) -> float:
+        # For binary classification, PredSampleWrapper stores thresholded predictions in `predictions_am`.
+        # Using raw `predictions` would typically mean operating on probabilities, which is incorrect
+        # for a 2x2 contingency-table-based odds ratio.
+        gt = sample.gt
+        pred = sample.predictions_am
+        counts = np.bincount(2 * gt + pred, minlength=4)
+        tn, fp, fn, tp = counts
+        
+        # Use a tiny epsilon to prevent log(0) without shifting the OR significantly
+        # Or stick to 0.5 only if you expect very frequent zeros.
+        log_tp = np.log(tp + self.epsilon)
+        log_tn = np.log(tn + self.epsilon)
+        log_fp = np.log(fp + self.epsilon)
+        log_fn = np.log(fn + self.epsilon)
+        return float((log_tp + log_tn) - (log_fp + log_fn))
+
+    def __str__(self) -> str:
+        return "LogOddsRatio"
 
 
     

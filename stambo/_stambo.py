@@ -54,6 +54,7 @@ def bootstrap_arrays(arrays: tuple[Union[npt.NDArray[int], npt.NDArray[float], P
             # Once the groups are sampled, we can concatenate the indices
             ind = np.concatenate([group_data[grp]["indices"] for grp in groups_ind])
             
+        # We are always in the paired design setting
         for s_tag in statistics:
             for sample_idx in range(len(arrays)):
                 v = statistics[s_tag](arrays[sample_idx][ind])
