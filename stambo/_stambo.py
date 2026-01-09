@@ -31,10 +31,42 @@ def bootstrap_arrays(arrays: tuple[Union[npt.NDArray[int], npt.NDArray[float], P
     Returns:
         A dictionary of statistics values for each bootstrap iteration and each sample.
     """
+    def _same_groups(a: Optional[np.ndarray], b: Optional[np.ndarray]) -> bool:
+        if a is None and b is None:
+            return True
+        if (a is None) != (b is None):
+            return False
+        return bool(np.array_equal(a, b))
 
+    # Sanity checks
+    # Note: numpy.typing.NDArray[...] is a typing construct and cannot be used with isinstance() checks.
+    if not all(isinstance(arr, (np.ndarray, PredSampleWrapper)) for arr in arrays):
+        raise ValueError("All arrays must be numpy.ndarray or PredSampleWrapper")
+    # Checking the lengths of the arrays
     arr_lengths = np.array([len(arr) for arr in arrays])
     assert np.all(arr_lengths == arr_lengths[0]), "All arrays must have the same length"
+    
+    # Checking the types of the arrays
+    if isinstance(arrays[0], PredSampleWrapper):
+        assert all(isinstance(arr, PredSampleWrapper) for arr in arrays), "All arrays must be of type PredSampleWrapper"
+        assert all(arr.multiclass == arrays[0].multiclass for arr in arrays), "All arrays must have the same multiclass setting"
+        assert all(arr.threshold == arrays[0].threshold for arr in arrays), "All arrays must have the same threshold"
+        assert all(_same_groups(arr.groups, arrays[0].groups) for arr in arrays), "All arrays must have the same groups"
+    else:
+        assert all(isinstance(arr, np.ndarray) for arr in arrays), "All arrays must be of type numpy.ndarray"
+        assert all(arr.dtype == arrays[0].dtype for arr in arrays), "All arrays must have the same dtype"
 
+    # This makes sure that the groups are set correctly
+    if isinstance(arrays[0], PredSampleWrapper):
+        if groups is not None and arrays[0].groups is not None:
+            raise Warning("Groups are provided when using PredSampleWrapper. They will be ignored, since the arrays already contain the groups.")
+        elif arrays[0].groups is not None:
+            assert all(_same_groups(arr.groups, arrays[0].groups) for arr in arrays), "All arrays must have the same groups"
+            groups = arrays[0].groups
+
+    # This creates the group data dictionary to make sure
+    # That we sample correctly
+    # This works exactly the same way for plain arrays and PredSampleWrapper objects.
     if groups is not None:
         groups_ids = np.unique(groups)
         group_data = {}

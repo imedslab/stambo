@@ -20,10 +20,11 @@ class PredSampleWrapper:
             cached_am: Optional cached argmax / thresholded predictions to reuse.
     """
     def __init__(self: PredSampleWrapperType, predictions: PredGtType, 
-                 gt: PredGtType, multiclass: bool=True, threshold: Optional[float]=0.5,
+                 gt: PredGtType, groups: Optional[npt.NDArray[int]]=None, multiclass: bool=True, threshold: Optional[float]=0.5,
                  cached_am: Optional[npt.NDArray[int]]=None):
 
         self.multiclass = multiclass
+        self.groups = groups
         self.predictions = predictions
         self.predictions_am = None
         self.threshold = threshold
