@@ -15,15 +15,20 @@ class PredSampleWrapper:
         Args:
             predictions: Model predictions to wrap.
             gt: Ground-truth labels.
+            groups: Optional groups indicating the subject for each measurement. When several
+                ``PredSampleWrapper`` samples are compared together (e.g. via
+                :func:`stambo.pairwise_bootstrap_test`), all of them must carry the same ``groups``.
+                Defaults to None.
             multiclass: Whether the predictions correspond to a multiclass classifier. Defaults to True.
             threshold: Threshold to apply to binary predictions when ``multiclass`` is False. Defaults to 0.5.
             cached_am: Optional cached argmax / thresholded predictions to reuse.
     """
-    def __init__(self: PredSampleWrapperType, predictions: PredGtType, 
-                 gt: PredGtType, multiclass: bool=True, threshold: Optional[float]=0.5,
+    def __init__(self: PredSampleWrapperType, predictions: PredGtType,
+                 gt: PredGtType, groups: Optional[npt.NDArray[int]]=None, multiclass: bool=True, threshold: Optional[float]=0.5,
                  cached_am: Optional[npt.NDArray[int]]=None):
 
         self.multiclass = multiclass
+        self.groups = groups
         self.predictions = predictions
         self.predictions_am = None
         self.threshold = threshold
@@ -52,8 +57,8 @@ class PredSampleWrapper:
 
         if isinstance(idx, int):
             return self.predictions[idx], self.predictions_am[idx], self.gt[idx]
-        return PredSampleWrapper(self.predictions[idx], self.gt[idx], multiclass=self.multiclass, 
-                                 threshold=self.threshold, cached_am=self.predictions_am[idx])
+        return PredSampleWrapper(self.predictions[idx], self.gt[idx], groups=None if self.groups is None else self.groups[idx],
+                                 multiclass=self.multiclass, threshold=self.threshold, cached_am=self.predictions_am[idx])
     
     def __len__(self):
         return self.predictions.shape[0]

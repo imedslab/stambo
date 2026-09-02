@@ -45,6 +45,17 @@ res = stambo.two_sample_test(sample_1, sample_2, statistics={"Mean": lambda x: x
 
 A more detailed and full example of the above is shown here: [`notebooks/Two_sample_test.ipynb`](notebooks/Two_sample_test.ipynb) ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Oulu-IMEDS/stambo/main?labpath=notebooks%2FTwo_sample_test.ipynb))
 
+If you have more than two models (or samples) to compare, `stambo.compare_models_pairwise` (and its lower-level building block, `stambo.pairwise_bootstrap_test`) run the bootstrap test on every pair, with a Holm-Bonferroni correction for the multiple comparisons applied by default:
+```
+import stambo
+...
+seed = 42
+results = stambo.compare_models_pairwise(y_test, (preds_1, preds_2, preds_3), ("ROCAUC", "AP"), seed=seed, n_bootstrap=1000)
+print(stambo.pairwise_to_latex(results))
+```
+
+See [`notebooks/Pairwise_comparison.ipynb`](notebooks/Pairwise_comparison.ipynb) ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Oulu-IMEDS/stambo/main?labpath=notebooks%2FPairwise_comparison.ipynb)) for a full walkthrough, including why the correction matters and how it interacts with clustered/grouped data.
+
 ## Contributing
 
 To setup a dev environment, you should use uv and install the project as follows:

@@ -1,4 +1,4 @@
-from typing import Iterable, Dict, Tuple, Optional
+from typing import Iterable, Dict, Tuple, Optional, Any
 from tqdm import tqdm as base_tqdm
 
 try:  # tqdm notebook widget is nicer inside Jupyter
@@ -82,6 +82,58 @@ def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_na
     tbl += " \\\\ \n\\bottomrule\n"
     # Final row
     tbl += "\\end{tabular}"
-    
+
+    return tbl
+
+
+def pairwise_to_latex(report: Dict[str, Dict[str, Dict[str, Any]]], n_digits: int=2) -> str:
+    r"""Converts a report returned by :func:`stambo.pairwise_bootstrap_test` /
+    :func:`stambo.compare_models_pairwise` into a LaTeX table, one row per pairwise comparison.
+
+    For each statistic, the table shows the observed effect size with its confidence interval,
+    and the p-value. If the report was produced with a multiple-comparison correction (i.e. at
+    least one comparison has a non-None ``p_value_adjusted``), the adjusted p-value is shown in
+    parentheses next to the raw one; otherwise only the raw p-value is shown.
+
+    Args:
+        report: Dictionary in the format returned by ``pairwise_bootstrap_test``/``compare_models_pairwise``:
+            ``{statistic: {"label_i / label_j": {"p_value": ..., "p_value_adjusted": ..., "diff": ..., "ci_es": (lo, hi), ...}}}``.
+        n_digits: Number of digits to round to. Defaults to 2.
+
+    Returns:
+        A cut-and-paste LaTeX table in the tabular environment.
+    """
+    statistics = list(report.keys())
+    comparisons = list(next(iter(report.values())).keys()) if statistics else []
+    has_adjusted = any(
+        report[s_tag][comparison]["p_value_adjusted"] is not None
+        for s_tag in statistics for comparison in comparisons
+    )
+
+    tbl = "% \\usepackage{booktabs} <-- do not forget to have this imported. \n"
+    tbl += "\\begin{tabular}{l" + "ll" * len(statistics) + "} \\\\ \n"
+    tbl += "\\toprule \n"
+    tbl += "\\textbf{Comparison}"
+    for s_tag in statistics:
+        tbl += " & \\multicolumn{2}{c}{\\textbf{" + s_tag + "}}"
+    tbl += " \\\\ \n"
+    tbl += " " + " & \\textbf{Diff [CI]} & \\textbf{$p$-value}" * len(statistics)
+    tbl += " \\\\ \n\\midrule \n"
+
+    for comparison in comparisons:
+        tbl += comparison
+        for s_tag in statistics:
+            entry = report[s_tag][comparison]
+            diff, ci_lo, ci_hi = entry["diff"], entry["ci_es"][0], entry["ci_es"][1]
+            tbl += " & " + f"${diff:.{n_digits}f}$ [${ci_lo:.{n_digits}f}$-${ci_hi:.{n_digits}f}$]"
+            p_val = entry["p_value"]
+            if has_adjusted and entry["p_value_adjusted"] is not None:
+                tbl += " & " + f"${p_val:.{n_digits}f}$ (${entry['p_value_adjusted']:.{n_digits}f}$)"
+            else:
+                tbl += " & " + f"${p_val:.{n_digits}f}$"
+        tbl += " \\\\ \n"
+    tbl += "\\bottomrule\n"
+    tbl += "\\end{tabular}"
+
     return tbl
 

@@ -50,7 +50,21 @@ The above will print a LaTeX table, which one can easily copy-paste:
    :align: left
    :width: 90%
 
+If you have more than two models (or samples) to compare, :func:`stambo.compare_models_pairwise`
+(and its lower-level building block, :func:`stambo.pairwise_bootstrap_test`) run the bootstrap
+test on every pair, with a Holm-Bonferroni correction for the multiple comparisons applied by
+default:
 
+.. code-block:: python
+
+   import stambo
+   ...
+   seed = 42
+   results = stambo.compare_models_pairwise(y_test, (preds_1, preds_2, preds_3), ("ROCAUC", "AP"), seed=seed, n_bootstrap=1000)
+   print(stambo.pairwise_to_latex(results))
+
+See the :doc:`Pairwise_comparison` example for a full walkthrough, including why the correction
+matters and how it interacts with clustered/grouped data.
 
 .. toctree::
    :maxdepth: 2
@@ -77,3 +91,4 @@ The above will print a LaTeX table, which one can easily copy-paste:
    Classification_non_iid
    Regression
    Two_sample_test
+   Pairwise_comparison
