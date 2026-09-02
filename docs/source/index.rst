@@ -11,7 +11,7 @@ About
 
 
 Statistical Model Comparison with Bootstrap (STAMBO) focuses on statistically sound comparisons between models and samples by implementing
-the one-tailed bootstrap hypothesis tests:
+the two-tailed bootstrap hypothesis tests:
 
 .. figure:: /_static/banner.png
    :alt: stambo banner

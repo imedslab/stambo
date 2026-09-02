@@ -22,8 +22,8 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
 
     .. math::
 
-        H_0: f(x_1) \geq f(x_2) \\
-        H_1: f(x_2) > f(x_1),
+        H_0: f(x_1) = f(x_2) \\
+        H_1: f(x_1) \neq f(x_2),
 
     where :math:`f` is a function of interest, and :math:`x_1` and :math:`x_2` are the samples to be compared.
     Note that the statistics are computed independently, and should thus be treated independently.
@@ -44,7 +44,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         A dictionary containing a tuple with the empirical value of
         the metric, and the p-value. Each entry in the dictionary contains, in order:
 
-            * Right-tailed :math:`p`-value, :math:`p(\texttt{data} \mid H_0)`
+            * Two-tailed :math:`p`-value, :math:`p(\texttt{data} \mid H_0)`
             * Observed difference (effect size)
             * CI low (effect size)
             * CI high (effect size)
@@ -104,23 +104,33 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         # Observed difference: Delta
         observed = emp_s2 - emp_s1
         diff_array = result[s_tag][:, 1] - result[s_tag][:, 0]
-        # Bootstrap percentile test: treat the bootstrap distribution of the
-        # difference statistic as an approximation of its sampling distribution,
-        # and ask how much of its mass contradicts the alternative hypothesis
-        # (Model 2 > Model 1). This is the same, non-shifted, bootstrap
-        # distribution that is used below for the percentile confidence
-        # intervals, so the reported p-value and CIs stay consistent with
-        # each other (CI excludes 0 iff p-value < alpha).
+        # Bootstrap percentile test: treat the (non-shifted) bootstrap
+        # distribution of the difference statistic as an approximation of its
+        # sampling distribution. This is the same distribution used below for
+        # the percentile confidence intervals, so the reported p-value and
+        # CIs stay consistent with each other (the (1 - alpha) CI excludes 0
+        # iff the two-tailed p-value < alpha).
+        #
+        # We compute both one-tailed tail masses directly (each with its own
+        # continuity correction) rather than deriving one from the other via
+        # `1 - p`. That matters at the boundary: if the two samples are
+        # identical, diff_array is a point mass at 0, and *both*
+        # P(diff <= 0) and P(diff >= 0) equal 1 (0 satisfies both `<=` and
+        # `>=`), correctly giving a two-tailed p-value of 1. Deriving the
+        # left tail as `1 - P(diff <= 0)` would instead (wrongly) give 0 in
+        # that case.
         #
         # Note: an earlier version of this function instead shifted the
         # bootstrap distribution by `observed` before comparing it against
         # `observed` again (i.e. testing diff_array >= 2 * observed). That
-        # formula is only equivalent to the one below when the bootstrap
-        # distribution of the difference happens to be symmetric around
-        # `observed`, and inflates the false-positive rate otherwise
-        # (e.g. for skewed/bounded metrics or small samples). See tests
-        # in tests/test_type_i_errors.py for a calibration check.
-        p_val_right = ((diff_array <= 0).sum() + 1.) / (n_bootstrap + 1)
+        # formula is only equivalent to the direct percentile method below
+        # when the bootstrap distribution of the difference happens to be
+        # symmetric around `observed`, and inflates the false-positive rate
+        # otherwise (e.g. for skewed/bounded metrics or small samples). See
+        # tests in tests/test_type_i_errors.py for a calibration check.
+        p_right = ((diff_array <= 0).sum() + 1.) / (n_bootstrap + 1)
+        p_left = ((diff_array >= 0).sum() + 1.) / (n_bootstrap + 1)
+        p_val = min(2. * min(p_right, p_left), 1.0)
         # Compute the effect size
         # We also want to compute the confidence intervals
         # In this version of STAMBO, we use the simple percentile method
@@ -129,7 +139,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         ci_s2 = (np.percentile(result[s_tag][:, 1], alpha / 2.), np.percentile(result[s_tag][:, 1], 100 - alpha / 2.))
         # And we report the p-value, empirical values, as well as the confidence intervals. 
         # The format in the documentation.
-        result_final[s_tag] = [p_val_right, observed, ci_es[0], ci_es[1], emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
+        result_final[s_tag] = [p_val, observed, ci_es[0], ci_es[1], emp_s1, ci_s1[0], ci_s1[1], emp_s2, ci_s2[0], ci_s2[1]]
         result_final[s_tag] = np.array(result_final[s_tag])
     return result_final
 
@@ -143,26 +153,27 @@ def compare_models(y_test: Union[npt.NDArray[int], npt.NDArray[float]],
                    n_bootstrap: int=5000, 
                    seed: Optional[int]=None, 
                    silent: bool=False) -> Dict[str, Tuple[float]]:
-    r"""Compares predictions from two models :math:`f_1(x)` and :math:`f_2(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}` 
-    with a one-tailed bootstrap hypothesis test. Note: you must make sure that the metric is defined as more is better (e.g. accuracy, AUC, and others).
-    
+    r"""Compares predictions from two models :math:`f_1(x)` and :math:`f_2(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}`
+    with a two-tailed bootstrap hypothesis test.
+
     I.e., we state the following null and alternative hypotheses:
 
     .. math::
-        H_0: M(y_{gt}, \hat y_{1}) \leq M(y_{gt}, \hat y_{2})
+        H_0: M(y_{gt}, \hat y_{1}) = M(y_{gt}, \hat y_{2})
 
-        H_1: M(y_{gt}, \hat y_{2}) > M(y_{gt}, \hat y_{1}),
+        H_1: M(y_{gt}, \hat y_{1}) \neq M(y_{gt}, \hat y_{2}),
 
-    where :math:`M` is a metric, :math:`y_{gt}` is the vector of ground truth labels, 
-    and :math:`\hat y_{i}, i=1,2` are the vectors of predictions for model 1 and 2, respectively. 
-    Such kind of testing is performed for every specified metric. 
-    
-    By default, the function assumes that the metrics are defined as more is better (e.g. accuracy, AUC, and others). 
-    If you work with metrics that are defined as less is better, just swap the models (:math:`\hat y_{1}` and :math:`\hat y_{2}`) in the function call.
-    
-    While the test does return you the :math:`p`-value, one should be careful about its interpretation: the :math:`p`-value 
+    where :math:`M` is a metric, :math:`y_{gt}` is the vector of ground truth labels,
+    and :math:`\hat y_{i}, i=1,2` are the vectors of predictions for model 1 and 2, respectively.
+    Such kind of testing is performed for every specified metric.
+
+    Since the test is two-tailed, the :math:`p`-value does not depend on which model is passed as model 1 vs. model 2, or on
+    whether the metric is defined as more-is-better or less-is-better. The sign of the reported effect size
+    (:math:`M(y_{gt}, \hat y_{2}) - M(y_{gt}, \hat y_{1})`) tells you which model scored higher on the metric as passed.
+
+    While the test does return you the :math:`p`-value, one should be careful about its interpretation: the :math:`p`-value
     is the probability of observing the test statistic *at least as extreme* as the one obtained assuming that :math:`H_0` is true (probability of Type II error).
-    With large data, even small effects can be statistically significant, so one should consider the effect size. 
+    With large data, even small effects can be statistically significant, so one should consider the effect size.
     
     We compute a standardized effect size using the estimated bootstrap variance.
 
@@ -190,10 +201,10 @@ def compare_models(y_test: Union[npt.NDArray[int], npt.NDArray[float]],
 
     Returns:
         A dictionary containing a tuple with the empirical value of
-        the metric, and the one-tailed p-value. The expected format in the output in
+        the metric, and the two-tailed p-value. The expected format in the output in
         every dict entry is:
 
-            * One-sided :math:`p`-value
+            * Two-tailed :math:`p`-value
             * Observed difference (effect size)
             * Effect size CI low
             * Effect size CI high
