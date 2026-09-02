@@ -1,5 +1,5 @@
 import numpy as np
-from typing import Optional, Dict, Callable, Tuple, Union, Sequence
+from typing import Any, Optional, Dict, Callable, Mapping, Tuple, Union, Sequence
 import numpy.typing as npt
 
 from ._utils import pbar
@@ -21,8 +21,8 @@ def _resolve_metrics(metrics: Tuple[Union[str, Metric], ...]) -> Dict[str, Metri
     return metrics_dict
 
 
-def _bootstrap_pair_result(diff_array: npt.NDArray[float], boot_1: npt.NDArray[float], boot_2: npt.NDArray[float],
-                            observed: float, emp_1: float, emp_2: float, alpha: float) -> Dict[str, object]:
+def _bootstrap_pair_result(diff_array: npt.NDArray[np.float64], boot_1: npt.NDArray[np.float64], boot_2: npt.NDArray[np.float64],
+                            observed: float, emp_1: float, emp_2: float, alpha: float) -> Dict[str, Any]:
     r"""Two-tailed percentile bootstrap test and confidence intervals for one pairwise comparison.
 
     This is the single place where the p-value/CI math lives, shared by :func:`two_sample_test`
@@ -66,7 +66,7 @@ def _bootstrap_pair_result(diff_array: npt.NDArray[float], boot_1: npt.NDArray[f
     }
 
 
-def holm_bonferroni_correction(p_values: Union[Sequence[float], npt.NDArray[float]]) -> npt.NDArray[float]:
+def holm_bonferroni_correction(p_values: Union[Sequence[float], npt.NDArray[np.float64]]) -> npt.NDArray[np.float64]:
     r"""Holm-Bonferroni step-down correction for multiple comparisons.
 
     Given :math:`m` p-values from a family of hypothesis tests, adjusts them so that the
@@ -112,12 +112,12 @@ def holm_bonferroni_correction(p_values: Union[Sequence[float], npt.NDArray[floa
     return adjusted
 
 
-def bootstrap_arrays(arrays: Tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], ...],
-                     statistics: Dict[str, Callable],
-                     groups: Optional[npt.NDArray[int]]=None,
+def bootstrap_arrays(arrays: Tuple[Union[npt.NDArray[np.int_], npt.NDArray[np.float64], PredSampleWrapper], ...],
+                     statistics: Mapping[str, Callable],
+                     groups: Optional[npt.NDArray[np.int_]]=None,
                      n_bootstrap: int=5000,
                      seed: Optional[int]=None,
-                     silent: bool=False) -> Dict[str, npt.NDArray[float]]:
+                     silent: bool=False) -> Dict[str, npt.NDArray[np.float64]]:
     r"""Bootstraps a tuple of mutually paired samples (e.g. predictions from :math:`N \geq 2` models
     evaluated on the same test set).
 
@@ -151,6 +151,7 @@ def bootstrap_arrays(arrays: Tuple[Union[npt.NDArray[int], npt.NDArray[float], P
             return True
         if (a is None) != (b is None):
             return False
+        assert a is not None and b is not None
         return bool(np.array_equal(a, b))
 
     assert len(arrays) >= 2, "At least two arrays are required"
@@ -160,18 +161,21 @@ def bootstrap_arrays(arrays: Tuple[Union[npt.NDArray[int], npt.NDArray[float], P
     arr_lengths = np.array([len(arr) for arr in arrays])
     assert np.all(arr_lengths == arr_lengths[0]), "All arrays must have the same length"
 
-    if isinstance(arrays[0], PredSampleWrapper):
-        assert all(isinstance(arr, PredSampleWrapper) for arr in arrays), "All arrays must be of type PredSampleWrapper"
-        assert all(arr.multiclass == arrays[0].multiclass for arr in arrays), "All arrays must have the same multiclass setting"
-        assert all(arr.threshold == arrays[0].threshold for arr in arrays), "All arrays must have the same threshold"
-        assert all(_same_groups(arr.groups, arrays[0].groups) for arr in arrays), "All PredSampleWrapper arrays must carry the same groups"
-        if groups is not None and arrays[0].groups is not None:
+    first = arrays[0]
+    if isinstance(first, PredSampleWrapper):
+        assert all(isinstance(arr, PredSampleWrapper) and arr.multiclass == first.multiclass for arr in arrays), \
+            "All arrays must be of type PredSampleWrapper, with the same multiclass setting"
+        assert all(isinstance(arr, PredSampleWrapper) and arr.threshold == first.threshold for arr in arrays), \
+            "All PredSampleWrapper arrays must have the same threshold"
+        assert all(isinstance(arr, PredSampleWrapper) and _same_groups(arr.groups, first.groups) for arr in arrays), \
+            "All PredSampleWrapper arrays must carry the same groups"
+        if groups is not None and first.groups is not None:
             raise ValueError("`groups` was passed explicitly, but the PredSampleWrapper samples already carry `groups`. Pass only one of the two.")
-        elif arrays[0].groups is not None:
-            groups = arrays[0].groups
+        elif first.groups is not None:
+            groups = first.groups
     else:
-        assert all(isinstance(arr, np.ndarray) for arr in arrays), "All arrays must be of type numpy.ndarray"
-        assert all(arr.dtype == arrays[0].dtype for arr in arrays), "All numpy.ndarray arrays must have the same dtype"
+        assert all(isinstance(arr, np.ndarray) and arr.dtype == first.dtype for arr in arrays), \
+            "All arrays must be of type numpy.ndarray, with the same dtype"
 
     if groups is not None:
         assert len(groups) == arr_lengths[0], "Groups must be of the same length as the samples"
@@ -197,11 +201,11 @@ def bootstrap_arrays(arrays: Tuple[Union[npt.NDArray[int], npt.NDArray[float], P
     return result
 
 
-def pairwise_bootstrap_test(samples: Tuple[Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], ...],
-                            statistics: Dict[str, Callable],
-                            groups: Optional[npt.NDArray[int]]=None,
+def pairwise_bootstrap_test(samples: Tuple[Union[npt.NDArray[np.int_], npt.NDArray[np.float64], PredSampleWrapper], ...],
+                            statistics: Mapping[str, Callable],
+                            groups: Optional[npt.NDArray[np.int_]]=None,
                             labels: Optional[Tuple[str, ...]]=None,
-                            bootstrap_results: Optional[Dict[str, npt.NDArray[float]]]=None,
+                            bootstrap_results: Optional[Dict[str, npt.NDArray[np.float64]]]=None,
                             alpha: float=0.05,
                             n_bootstrap: int=5000,
                             correction: Optional[str]="holm",
@@ -245,7 +249,7 @@ def pairwise_bootstrap_test(samples: Tuple[Union[npt.NDArray[int], npt.NDArray[f
     n_samples = len(samples)
     assert n_samples >= 2, "At least two samples are required for a pairwise comparison"
     if labels is None:
-        labels = [str(i) for i in range(n_samples)]
+        labels = tuple(str(i) for i in range(n_samples))
     assert len(labels) == n_samples, "The number of labels must match the number of samples"
     assert len(set(labels)) == n_samples, "Labels must be unique"
     assert correction in (None, "holm"), f"Unsupported correction method: {correction!r}. Only 'holm' (or None) is currently supported."
@@ -257,7 +261,7 @@ def pairwise_bootstrap_test(samples: Tuple[Union[npt.NDArray[int], npt.NDArray[f
         assert len(bootstrap_results) == len(statistics), "The number of bootstrap results must match the number of statistics"
         assert all(s_tag in bootstrap_results for s_tag in statistics), "All statistics must be present in the precomputed bootstrap results"
 
-    result_final = {}
+    result_final: Dict[str, Dict[str, Dict[str, Any]]] = {}
     for s_tag in statistics:
         result_final[s_tag] = {}
         emp = [statistics[s_tag](sample) for sample in samples]
@@ -282,14 +286,14 @@ def pairwise_bootstrap_test(samples: Tuple[Union[npt.NDArray[int], npt.NDArray[f
     return result_final
 
 
-def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
-                    sample_2: Union[npt.NDArray[int], npt.NDArray[float], PredSampleWrapper], 
-                    statistics: Dict[str, Callable], 
-                    groups: Optional[npt.NDArray[int]]=None,
+def two_sample_test(sample_1: Union[npt.NDArray[np.int_], npt.NDArray[np.float64], PredSampleWrapper], 
+                    sample_2: Union[npt.NDArray[np.int_], npt.NDArray[np.float64], PredSampleWrapper], 
+                    statistics: Mapping[str, Callable], 
+                    groups: Optional[npt.NDArray[np.int_]]=None,
                     alpha: float=0.05, 
-                    n_bootstrap: int=5000, seed: int=None, 
+                    n_bootstrap: int=5000, seed: Optional[int]=None,
                     non_paired: bool=False,
-                    silent: bool=False) -> Dict[str, Tuple[float]]:
+                    silent: bool=False) -> Dict[str, npt.NDArray[np.float64]]:
     r"""Compares whether the empirical difference of statistics computed on two samples is statistically significant or not.
 
     The hypotheses we test are:
@@ -390,15 +394,15 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
     return result_final
 
 
-def compare_models(y_test: Union[npt.NDArray[int], npt.NDArray[float]], 
-                   preds_1: Union[npt.NDArray[int], npt.NDArray[float]], 
-                   preds_2: Union[npt.NDArray[int], npt.NDArray[float]], 
+def compare_models(y_test: Union[npt.NDArray[np.int_], npt.NDArray[np.float64]], 
+                   preds_1: Union[npt.NDArray[np.int_], npt.NDArray[np.float64]], 
+                   preds_2: Union[npt.NDArray[np.int_], npt.NDArray[np.float64]], 
                    metrics: Tuple[Union[str, Metric]],
-                   groups: Optional[npt.NDArray[int]]=None,
+                   groups: Optional[npt.NDArray[np.int_]]=None,
                    alpha: float=0.05, 
                    n_bootstrap: int=5000, 
                    seed: Optional[int]=None, 
-                   silent: bool=False) -> Dict[str, Tuple[float]]:
+                   silent: bool=False) -> Dict[str, npt.NDArray[np.float64]]:
     r"""Compares predictions from two models :math:`f_1(x)` and :math:`f_2(x)` that yield prediction vectors  :math:`\hat y_{1}` and :math:`\hat y_{2}`
     with a two-tailed bootstrap hypothesis test.
 
@@ -475,11 +479,11 @@ def compare_models(y_test: Union[npt.NDArray[int], npt.NDArray[float]],
     return output
 
 
-def compare_models_pairwise(y_test: Union[npt.NDArray[int], npt.NDArray[float]],
-                            preds: Tuple[Union[npt.NDArray[int], npt.NDArray[float]], ...],
+def compare_models_pairwise(y_test: Union[npt.NDArray[np.int_], npt.NDArray[np.float64]],
+                            preds: Tuple[Union[npt.NDArray[np.int_], npt.NDArray[np.float64]], ...],
                             metrics: Tuple[Union[str, Metric]],
                             labels: Optional[Tuple[str, ...]]=None,
-                            groups: Optional[npt.NDArray[int]]=None,
+                            groups: Optional[npt.NDArray[np.int_]]=None,
                             alpha: float=0.05,
                             n_bootstrap: int=5000,
                             correction: Optional[str]="holm",

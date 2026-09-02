@@ -1,12 +1,11 @@
-from typing import Union, Iterable, Tuple, Optional, TypeVar
+from typing import Union, Tuple, Optional
 import numpy as np
 import numpy.typing as npt
 
 
-PredGtType = npt.NDArray[Union[float, int]]
+PredGtType = Union[npt.NDArray[np.float64], npt.NDArray[np.int_]]
 PredTuple = Tuple[float, int, Union[float, int]]
-IndexType = Union[int, Iterable[int], npt.NDArray[int]]
-PredSampleWrapperType = TypeVar("PredSampleWrapperType", bound="PredSampleWrapper")
+IndexType = Union[int, npt.NDArray[np.int_]]
 
 
 class PredSampleWrapper:
@@ -23,28 +22,27 @@ class PredSampleWrapper:
             threshold: Threshold to apply to binary predictions when ``multiclass`` is False. Defaults to 0.5.
             cached_am: Optional cached argmax / thresholded predictions to reuse.
     """
-    def __init__(self: PredSampleWrapperType, predictions: PredGtType,
-                 gt: PredGtType, groups: Optional[npt.NDArray[int]]=None, multiclass: bool=True, threshold: Optional[float]=0.5,
-                 cached_am: Optional[npt.NDArray[int]]=None):
+    def __init__(self, predictions: PredGtType,
+                 gt: PredGtType, groups: Optional[npt.NDArray[np.int_]]=None, multiclass: bool=True, threshold: Optional[float]=0.5,
+                 cached_am: Optional[npt.NDArray[np.int_]]=None):
 
         self.multiclass = multiclass
         self.groups = groups
         self.predictions = predictions
-        self.predictions_am = None
         self.threshold = threshold
         # Re-using thresholded / argmax values if they are available already when we subsample the data
-        if cached_am is None:
-            if self.multiclass:
-                self.predictions_am = np.argmax(predictions, axis=1)
-            else:
-                if threshold is None or not isinstance(threshold, float):
-                    raise ValueError(f"The threshold must not be None, and be of type `float`. Found: {threshold}")
-                self.predictions_am = self.predictions > threshold
-        else:
+        self.predictions_am: np.ndarray
+        if cached_am is not None:
             self.predictions_am = cached_am
+        elif self.multiclass:
+            self.predictions_am = np.argmax(predictions, axis=1)
+        else:
+            if threshold is None or not isinstance(threshold, float):
+                raise ValueError(f"The threshold must not be None, and be of type `float`. Found: {threshold}")
+            self.predictions_am = self.predictions > threshold
         self.gt = gt
 
-    def __getitem__(self: PredSampleWrapperType, idx: IndexType) -> Union[PredTuple, PredSampleWrapperType]:
+    def __getitem__(self, idx: IndexType) -> Union[PredTuple, "PredSampleWrapper"]:
         r"""Give access to the predictions and the ground truth by index or a set of indices.
 
         Args:

@@ -65,3 +65,6 @@ dev = [
 
 [tool.setuptools.packages.find]
 include = ["stambo"]
+
+[tool.setuptools.package-data]
+stambo = ["py.typed"]

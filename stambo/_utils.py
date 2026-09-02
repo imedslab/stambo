@@ -1,4 +1,6 @@
-from typing import Iterable, Dict, Tuple, Optional, Any
+from typing import Iterable, Dict, Tuple, Optional, Union, Any
+import numpy as np
+import numpy.typing as npt
 from tqdm import tqdm as base_tqdm
 
 try:  # tqdm notebook widget is nicer inside Jupyter
@@ -36,7 +38,7 @@ def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> base_
     tqdm_impl = notebook_tqdm if _in_notebook() else base_tqdm
     return tqdm_impl(iterable, total=total, desc=desc)
 
-def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_name: Optional[str]="M2", n_digits: int=2) -> str:
+def to_latex(report: Dict[str, npt.NDArray[np.float64]], m1_name: str="M1", m2_name: str="M2", n_digits: int=2) -> str:
     r"""Converts a report returned by StamBO into a LaTeX table for convenient viewing.
 
     Note: The alternative hypothesis is that the second model (M2) is different from the first model (M1).
@@ -136,4 +138,38 @@ def pairwise_to_latex(report: Dict[str, Dict[str, Dict[str, Any]]], n_digits: in
     tbl += "\\end{tabular}"
 
     return tbl
+
+
+def to_dict(report: Dict[str, npt.NDArray[np.float64]]) -> Dict[str, Dict[str, Union[float, Tuple[float, float]]]]:
+    r"""Converts a report returned by :func:`stambo.two_sample_test` / :func:`stambo.compare_models`
+    (a dict of positional arrays) into a dict of named fields, using the same field names already
+    used by :func:`stambo.pairwise_bootstrap_test` / :func:`stambo.compare_models_pairwise`
+    (``p_value``, ``diff``, ``ci_es``, ``ci_s1``, ``ci_s2``, ``emp_s1``, ``emp_s2``) -- one
+    consistent vocabulary across the whole library, instead of remembering the positional array
+    order (index 0 is the p-value, index 1 the effect size, etc.).
+
+    Every value is cast to a plain Python ``float`` (never ``numpy.float64``), so the result is
+    guaranteed to round-trip through ``json.dumps`` -- unlike the raw report, whose ``numpy.ndarray``
+    values are not JSON-serializable.
+
+    Args:
+        report: Dictionary in the format returned by ``two_sample_test``/``compare_models``:
+            ``{statistic: array([p_value, diff, ci_es_lo, ci_es_hi, emp_s1, ci_s1_lo, ci_s1_hi, emp_s2, ci_s2_lo, ci_s2_hi])}``.
+
+    Returns:
+        ``{statistic: {"p_value": ..., "diff": ..., "ci_es": (lo, hi), "ci_s1": (lo, hi), "ci_s2": (lo, hi), "emp_s1": ..., "emp_s2": ...}}``.
+    """
+    out: Dict[str, Dict[str, Union[float, Tuple[float, float]]]] = {}
+    for s_tag, values in report.items():
+        p_value, diff, ci_es_lo, ci_es_hi, emp_s1, ci_s1_lo, ci_s1_hi, emp_s2, ci_s2_lo, ci_s2_hi = (float(v) for v in values)
+        out[s_tag] = {
+            "p_value": p_value,
+            "diff": diff,
+            "ci_es": (ci_es_lo, ci_es_hi),
+            "ci_s1": (ci_s1_lo, ci_s1_hi),
+            "ci_s2": (ci_s2_lo, ci_s2_hi),
+            "emp_s1": emp_s1,
+            "emp_s2": emp_s2,
+        }
+    return out
 
