@@ -22,8 +22,8 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
 
     .. math::
 
-        H_0: f(x_1) \leq f(x_2) \\
-        H_1: f(x_1) > f(x_2),
+        H_0: f(x_1) \geq f(x_2) \\
+        H_1: f(x_2) > f(x_1),
 
     where :math:`f` is a function of interest, and :math:`x_1` and :math:`x_2` are the samples to be compared.
     Note that the statistics are computed independently, and should thus be treated independently.
@@ -44,7 +44,7 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         A dictionary containing a tuple with the empirical value of
         the metric, and the p-value. Each entry in the dictionary contains, in order:
 
-            * Right-tailed :math:`p(H_0 \mid \texttt{data})`
+            * Right-tailed :math:`p`-value, :math:`p(\texttt{data} \mid H_0)`
             * Observed difference (effect size)
             * CI low (effect size)
             * CI high (effect size)
@@ -104,10 +104,23 @@ def two_sample_test(sample_1: Union[npt.NDArray[int], npt.NDArray[float], PredSa
         # Observed difference: Delta
         observed = emp_s2 - emp_s1
         diff_array = result[s_tag][:, 1] - result[s_tag][:, 0]
-        # Generating the null
-        # Model 2 > Model 1 is the alternative hypothesis in one-tailed test
-        null = diff_array - observed
-        p_val_right = ((null >= observed).sum() + 1.) / (n_bootstrap + 1)
+        # Bootstrap percentile test: treat the bootstrap distribution of the
+        # difference statistic as an approximation of its sampling distribution,
+        # and ask how much of its mass contradicts the alternative hypothesis
+        # (Model 2 > Model 1). This is the same, non-shifted, bootstrap
+        # distribution that is used below for the percentile confidence
+        # intervals, so the reported p-value and CIs stay consistent with
+        # each other (CI excludes 0 iff p-value < alpha).
+        #
+        # Note: an earlier version of this function instead shifted the
+        # bootstrap distribution by `observed` before comparing it against
+        # `observed` again (i.e. testing diff_array >= 2 * observed). That
+        # formula is only equivalent to the one below when the bootstrap
+        # distribution of the difference happens to be symmetric around
+        # `observed`, and inflates the false-positive rate otherwise
+        # (e.g. for skewed/bounded metrics or small samples). See tests
+        # in tests/test_type_i_errors.py for a calibration check.
+        p_val_right = ((diff_array <= 0).sum() + 1.) / (n_bootstrap + 1)
         # Compute the effect size
         # We also want to compute the confidence intervals
         # In this version of STAMBO, we use the simple percentile method
@@ -194,7 +207,7 @@ def compare_models(y_test: Union[npt.NDArray[int], npt.NDArray[float]],
 
     # Data samples need to be prepared
     sample_1 = PredSampleWrapper(preds_1, y_test, multiclass=len(preds_1.shape) != 1)
-    sample_2 = PredSampleWrapper(preds_2, y_test, multiclass=len(preds_1.shape) != 1)
+    sample_2 = PredSampleWrapper(preds_2, y_test, multiclass=len(preds_2.shape) != 1)
 
     metrics_dict = {}
     for metric in metrics:

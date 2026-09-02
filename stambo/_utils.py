@@ -38,10 +38,10 @@ def pbar(iterable: Iterable, total: int, desc: str, silent: bool=False) -> base_
 
 def to_latex(report: Dict[str, Tuple[float]], m1_name: Optional[str]="M1", m2_name: Optional[str]="M2", n_digits: int=2) -> str:
     r"""Converts a report returned by StamBO into a LaTeX table for convenient viewing.
-    
-    Note: The alternative hypothesis is that the second model is different from the first model. 
-    The p-value is the two-tailed p-value.
-        
+
+    Note: The alternative hypothesis is that the second model (M2) is better than the first model (M1).
+    The p-value is the right-tailed (one-tailed) p-value.
+
     Args:
         report: Dictionary with metrics in the StamBO-generated format.
         m1_name: Name to assign to the first model row. Defaults to M1.

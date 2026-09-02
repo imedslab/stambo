@@ -8,7 +8,7 @@
 This package is aimed to be a one-stop-shop for statistical testing in machine learning when it comes to evaluating models on a test set and comparing whether our *improved* model is really beating the baseline. That is, we cover the following very typical use-case in machine learning:
 ![usecase](docs/source/_static/usecase.png)
 
-Currently, we support the cases of classification, regresson, and semantic segmentation. We do not yet support the significance of ranking, as well as grouped data. It is coming in the future releases.
+Currently, we support the cases of classification, regresson, and semantic segmentation, including data with a block-diagonal (grouped/clustered) covariance structure, e.g. repeated measurements from the same subject. We do not yet support the significance of ranking. It is coming in future releases.
 
 ## In practice
 Install from PyPI:
