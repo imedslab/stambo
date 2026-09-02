@@ -66,6 +66,25 @@ default:
 See the :doc:`Pairwise_comparison` example for a full walkthrough, including why the correction
 matters and how it interacts with clustered/grouped data.
 
+Using stambo with AI coding agents
+------------------------------------
+
+stambo is built to be used directly by AI coding agents (e.g. Claude Code, Codex) that write
+and run Python against the installed package. The repository ships an
+`AGENTS.md <https://github.com/imedslab/stambo/blob/main/AGENTS.md>`_ file -- a concise,
+verified cheat sheet covering which function to call, paired vs. ``non_paired`` vs. ``groups``
+semantics, the two-tailed p-value convention, and the exact return-format schema -- which
+coding agents pick up automatically as project context (a ``CLAUDE.md`` pointer is included
+too, for Claude Code's own auto-load mechanism).
+
+To make results easy for agents (and anyone scripting against stambo) to consume:
+
+- :func:`stambo.to_dict` converts a :func:`stambo.two_sample_test`/:func:`stambo.compare_models`
+  report into the same named-field, JSON-serializable dict shape already used by the pairwise
+  functions, instead of a positional ``numpy.ndarray``.
+- The package ships a ``py.typed`` marker, so type checkers and IDE/agent tooling trust the
+  type hints throughout the public API.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:

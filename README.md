@@ -56,6 +56,10 @@ print(stambo.pairwise_to_latex(results))
 
 See [`notebooks/Pairwise_comparison.ipynb`](notebooks/Pairwise_comparison.ipynb) ([![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/Oulu-IMEDS/stambo/main?labpath=notebooks%2FPairwise_comparison.ipynb)) for a full walkthrough, including why the correction matters and how it interacts with clustered/grouped data.
 
+## Built for AI coding agents
+
+stambo is agent-ready: [`AGENTS.md`](AGENTS.md) is a concise, verified cheat sheet (which function to call, paired/`non_paired`/`groups` semantics, the two-tailed convention, return-format schema) that coding agents such as Claude Code or Codex pick up automatically as project context (`CLAUDE.md` is a pointer to it for Claude Code's own auto-load). `stambo.to_dict(report)` gives results as a JSON-serializable, named-field dict instead of a positional array, and the package ships a `py.typed` marker so type checkers and IDE/agent tooling trust its type hints.
+
 ## Contributing
 
 To setup a dev environment, you should use uv and install the project as follows:
