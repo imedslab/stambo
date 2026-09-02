@@ -1,0 +1,3 @@
+{
+  "path": "../../notebooks/Pairwise_comparison.ipynb"
+}
